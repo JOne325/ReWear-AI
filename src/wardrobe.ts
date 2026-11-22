@@ -17,9 +17,12 @@ export type OutfitRecommendation = {
   reason: string
 }
 
+export const occasions = ['University', 'Interview'] as const
+export type Occasion = typeof occasions[number]
+
 export type SavedOutfit = OutfitRecommendation & {
   id: string
-  occasion: 'University'
+  occasion: Occasion
   pieces: ClothingItem[]
   savedAt: number
 }

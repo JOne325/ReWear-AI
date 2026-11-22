@@ -3,10 +3,11 @@ import { useClothing } from './useClothing'
 import { mockClothing } from './mockClothing'
 import { putOutfit } from './clothingStorage'
 import OutfitBoard from './OutfitBoard'
-import { clothingCategories, recommendationItemLimit, type OutfitRecommendation } from './wardrobe'
+import { clothingCategories, occasions, recommendationItemLimit, type Occasion, type OutfitRecommendation } from './wardrobe'
 
 export default function StyleMe() {
   const { items, loadError } = useClothing()
+  const [occasion, setOccasion] = useState<Occasion>('University')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -27,7 +28,7 @@ export default function StyleMe() {
         const selected = groups.map((group, i) => group[Math.floor(turn / 2 ** i) % group.length])
         const [top, bottom, shoes] = selected
         const detail = top.id === 'forest-sweatshirt' ? 'adds a warm layer for cool lecture halls' : 'keeps the layers light for a full day of classes'
-        setOutfit({ itemIds: selected.map(item => item.id), reason: 'The ' + top.name.toLowerCase() + ' ' + detail + ', while the ' + bottom.name.toLowerCase() + ' and ' + shoes.name.toLowerCase() + ' keep the outfit casual for campus.' })
+        setOutfit({ itemIds: selected.map(item => item.id), reason: occasion === 'Interview' ? 'These demo pieces make a casual interview option. Check the dress code first, especially if a blazer or formal shoes are expected.' : 'The ' + top.name.toLowerCase() + ' ' + detail + ', while the ' + bottom.name.toLowerCase() + ' and ' + shoes.name.toLowerCase() + ' keep the outfit casual for campus.' })
         setTurn(turn + 1)
       } else {
         // Rotate one category with alternatives away from the previous selection.
@@ -36,7 +37,7 @@ export default function StyleMe() {
         const first = clothingCategories.map(category => eligible.find(item => item.category === category)!)
         const candidates = [...first, ...eligible.filter(item => !first.includes(item))].slice(0, recommendationItemLimit)
         const response = await fetch('/api/recommendations', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: candidates.map(({ id, name, category, color }) => ({ id, name, category, color })) }) })
+          body: JSON.stringify({ occasion, items: candidates.map(({ id, name, category, color }) => ({ id, name, category, color })) }) })
         const result = await response.json()
         if (!response.ok) throw new Error(result.error || 'Could not get an outfit.')
         setOutfit(result)
@@ -47,14 +48,20 @@ export default function StyleMe() {
   }
 
   return <>
-    <h2>University</h2><p>{demo ? 'Using the six-piece demo wardrobe.' : 'Style Me shares garment names, categories and colors with Gemini.'}</p>
+    <label>Occasion <select value={occasion} disabled={busy} onChange={event => {
+      setOccasion(event.target.value as Occasion)
+      setOutfit(null)
+      setTurn(0)
+      setError('')
+      setSaved(false)
+    }}>{occasions.map(value => <option key={value}>{value}</option>)}</select></label><p>{demo ? 'Using the six-piece demo wardrobe.' : 'Style Me shares garment names, categories and colors with Gemini.'}</p>
     <button className="action-button" disabled={busy} onClick={suggest}>{outfit ? 'Try Again' : 'Suggest an outfit'}</button>
     {error && <p role="alert">{error}</p>}
     {outfit && <section aria-label="Suggested outfit"><OutfitBoard pieces={pieces} /><p>{outfit.reason}</p>
       <button className="action-button" disabled={busy || saved} onClick={async () => {
         setBusy(true); setError('')
         try {
-          await putOutfit({ ...outfit, id: JSON.stringify(pieces.map(item => item.id)), pieces, occasion: 'University', savedAt: Date.now() })
+          await putOutfit({ ...outfit, id: JSON.stringify(occasion === 'University' ? pieces.map(item => item.id) : [occasion, ...pieces.map(item => item.id)]), pieces, occasion, savedAt: Date.now() })
           setSaved(true)
         } catch { setError('Could not save this outfit. Try again.') }
         finally { setBusy(false) }
