@@ -49,3 +49,12 @@ test('reports missing server configuration without calling Gemini', async () => 
   })
   assert.equal(result.status, 503)
 })
+
+test('accepts Interview and rejects unsupported occasions', async () => {
+  const result = await recommendOutfit({ items, occasion: 'Interview' }, config, async (_url, init) => {
+    assert.match(JSON.parse(String(init?.body)).systemInstruction.parts[0].text, /Interview/)
+    return providerResponse(outfit)
+  })
+  assert.equal(result.status, 200)
+  assert.equal((await recommendOutfit({ items, occasion: 'Other' }, {})).status, 400)
+})

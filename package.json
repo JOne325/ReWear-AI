@@ -7,8 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --test server/recommendations.test.ts",
-    "preview": "vite preview"
+    "test": "node --test server/*.test.ts",
+    "preview": "vite preview",
+    "start": "node server/start.ts"
   },
   "dependencies": {
     "react": "^19.3.1",
