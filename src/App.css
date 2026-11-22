@@ -1,0 +1,7 @@
+header, main { max-width: 64rem; margin: auto; padding: 1.25rem; }
+header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #bdc6b9; }
+strong { font: bold 1.65rem Georgia, serif; }
+nav { display: flex; gap: .25rem; }
+a { color: inherit; padding: .8rem .55rem; text-decoration: none; }
+a[aria-current] { text-decoration: underline; text-underline-offset: .4rem; }
+h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
