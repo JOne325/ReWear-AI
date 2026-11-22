@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { addClothing, listClothing } from './clothingStorage'
+import { putClothing, removeClothing, listClothing } from './clothingStorage'
 import type { ClothingItem } from './wardrobe'
 
 export function useClothing() {
@@ -15,10 +15,14 @@ export function useClothing() {
     return () => { active = false }
   }, [])
 
-  async function saveItem(details: Omit<ClothingItem, 'id'>) {
-    const item = await addClothing(details)
-    setItems(current => [...(current ?? []), item])
+  async function saveItem(item: ClothingItem) {
+    await putClothing(item)
+    setItems(current => [...(current ?? []).filter(other => other.id !== item.id), item])
   }
 
-  return { items, loadError, saveItem }
+  async function deleteItem(id: string) {
+    await removeClothing(id)
+    setItems(current => (current ?? []).filter(item => item.id !== id))
+  }
+  return { items, loadError, saveItem, deleteItem }
 }

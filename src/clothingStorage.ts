@@ -1,43 +1,38 @@
-import type { ClothingItem } from './wardrobe'
+import type { ClothingItem, SavedOutfit } from './wardrobe'
 
-const storeName = 'clothing'
-
+type Store = 'clothing' | 'outfits'
 function openCloset() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('rewear-wardrobe', 1)
-
+    const request = indexedDB.open('rewear-wardrobe', 2)
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(storeName, { keyPath: 'id' })
+      for (const store of ['clothing', 'outfits']) {
+        if (!request.result.objectStoreNames.contains(store)) {
+          request.result.createObjectStore(store, { keyPath: 'id' })
+        }
+      }
     }
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
   })
 }
 
-async function withClothingStore<T>(
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<T>,
-): Promise<T> {
+async function transact<T>(store: Store, mode: IDBTransactionMode, run: (table: IDBObjectStore) => IDBRequest<T>) {
   const db = await openCloset()
   try {
     return await new Promise<T>((resolve, reject) => {
-      const transaction = db.transaction(storeName, mode)
-      const request = run(transaction.objectStore(storeName))
-
+      const transaction = db.transaction(store, mode)
+      const request = run(transaction.objectStore(store))
       transaction.oncomplete = () => resolve(request.result)
-      transaction.onabort = () => reject(transaction.error ?? new Error('Closet transaction aborted'))
+      transaction.onabort = () => reject(transaction.error ?? new Error('Storage transaction aborted'))
     })
   } finally {
     db.close()
   }
 }
 
-export function listClothing() {
-  return withClothingStore<ClothingItem[]>('readonly', store => store.getAll())
-}
-
-export async function addClothing(details: Omit<ClothingItem, 'id'>) {
-  const item = { ...details, id: crypto.randomUUID() }
-  await withClothingStore('readwrite', store => store.add(item))
-  return item
-}
+export const listClothing = () => transact<ClothingItem[]>('clothing', 'readonly', table => table.getAll())
+export const putClothing = (item: ClothingItem) => transact('clothing', 'readwrite', table => table.put(item))
+export const removeClothing = (id: string) => transact('clothing', 'readwrite', table => table.delete(id))
+export const listOutfits = () => transact<SavedOutfit[]>('outfits', 'readonly', table => table.getAll())
+export const putOutfit = (outfit: SavedOutfit) => transact('outfits', 'readwrite', table => table.put(outfit))
+export const removeOutfit = (id: string) => transact('outfits', 'readwrite', table => table.delete(id))
