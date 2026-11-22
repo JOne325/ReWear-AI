@@ -9,9 +9,17 @@ export type ClothingItem = {
   name: string
   category: ClothingCategory
   color: string
+  photo?: string
 }
 
 export type OutfitRecommendation = {
   itemIds: string[]
   reason: string
+}
+
+export type SavedOutfit = OutfitRecommendation & {
+  id: string
+  occasion: 'University'
+  pieces: ClothingItem[]
+  savedAt: number
 }

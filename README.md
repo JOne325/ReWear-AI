@@ -13,7 +13,7 @@ npm run dev
 
 Open the local URL printed by Vite. Run `npm run build` and `npm run lint` before merging.
 
-Closet stores clothing in IndexedDB for the current browser and origin. Example cards appear until you add a clothing item. Style Me needs at least one saved item in each category.
+Closet stores clothing and cropped photos in IndexedDB for the current browser and origin. An empty closet shows a six-piece demo wardrobe with locally bundled AI-generated garment images. Style Me cycles through University outfits in demo mode. Personal recommendations require one saved item in each category. Saved outfits keep the original garment IDs, images, and names as they appeared when saved.
 
 ## Style Me setup
 

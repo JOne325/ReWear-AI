@@ -1,11 +1,12 @@
 import './App.css'
 import Closet from './Closet'
 import StyleMe from './StyleMe'
+import Saved from './Saved'
 
 const sections = [
   { path: '/', title: 'Closet' },
   { path: '/style', title: 'Style Me' },
-  { path: '/saved', title: 'Saved', message: 'Your saved outfits will appear here.' },
+  { path: '/saved', title: 'Saved' },
 ]
 
 export default function App() {
@@ -21,7 +22,7 @@ export default function App() {
       <main><h1>{current?.title ?? 'Page unavailable'}</h1>
         {current?.path === '/' && <Closet />}
         {current?.path === '/style' && <StyleMe />}
-        {current?.message && <p>{current.message}</p>}
+        {current?.path === '/saved' && <Saved />}
         {!current && <p>Choose a page from the navigation above.</p>}
       </main>
     </>
