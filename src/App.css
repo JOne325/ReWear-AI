@@ -163,3 +163,35 @@ button { font: inherit; cursor: pointer; }
 .outfit-board figcaption { padding: .5rem 0; overflow-wrap: anywhere; }
 .saved-outfit { padding: 1rem 0; border-bottom: 1px solid #bdc6b9; }
 @media (max-width: 28rem) { .closet-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+.outfit-board {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas: "tops outerwear" "bottoms ." "shoes .";
+  max-width: 28rem;
+  background: #eeeae1;
+  border-radius: 1rem;
+  padding: clamp(.65rem, 3vw, 1.25rem);
+}
+.outfit-board:not(:has(.slot-outerwear)) {
+  grid-template-columns: minmax(0, 14rem);
+  grid-template-areas: "tops" "bottoms" "shoes";
+  justify-content: center;
+}
+.outfit-board .slot-tops { grid-area: tops; }
+.outfit-board .slot-bottoms { grid-area: bottoms; }
+.outfit-board .slot-shoes { grid-area: shoes; }
+.outfit-board .slot-outerwear { grid-area: outerwear; }
+.outfit-board img.garment-photo { object-fit: contain; background: #fff; }
+.fit-preview { aspect-ratio: 1; object-fit: contain; background: white; }
+.photo-pickers { display: flex; gap: .5rem; flex-wrap: wrap; }
+.photo-pickers label {
+  position: relative;
+  place-items: center;
+  min-height: 44px;
+  padding: .45rem .75rem;
+  border: 1px solid #76877c;
+  border-radius: .5rem;
+  cursor: pointer;
+}
+.photo-pickers input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.photo-pickers label:focus-within { outline: 2px solid #1e362e; outline-offset: 2px; }

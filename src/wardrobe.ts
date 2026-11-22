@@ -1,4 +1,5 @@
-export const clothingCategories = ['Tops', 'Bottoms', 'Shoes'] as const
+export const baseCategories = ['Tops', 'Bottoms', 'Shoes'] as const
+export const clothingCategories = [...baseCategories, 'Outerwear'] as const
 export type ClothingCategory = typeof clothingCategories[number]
 
 export const clothingNameLimit = 80
@@ -10,6 +11,7 @@ export type ClothingItem = {
   category: ClothingCategory
   color: string
   photo?: string
+  backPhoto?: string
 }
 
 export type OutfitRecommendation = {

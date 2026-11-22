@@ -58,3 +58,14 @@ test('accepts Interview and rejects unsupported occasions', async () => {
   assert.equal(result.status, 200)
   assert.equal((await recommendOutfit({ items, occasion: 'Other' }, {})).status, 400)
 })
+
+test('allows outerwear as a layer and requires a separate base top', async () => {
+  const jacket = { id: 'jacket', name: 'Navy jacket', category: 'Outerwear', color: '#223355' }
+  const layered = [...outfit.itemIds, jacket.id]
+  assert.equal((await recommendOutfit({ items: [...items, jacket] }, config, async () =>
+    providerResponse({ ...outfit, itemIds: layered }))).status, 200)
+  assert.equal((await recommendOutfit({ items: [...items, jacket] }, config, async () =>
+    providerResponse(outfit))).status, 200)
+  assert.equal((await recommendOutfit({ items: [...items.slice(1), jacket] }, config, async () =>
+    assert.fail('Outerwear cannot fill the base-top slot'))).status, 400)
+})

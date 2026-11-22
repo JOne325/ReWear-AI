@@ -1,4 +1,9 @@
-export type GeminiConfig = { apiKey?: string; model?: string }
+export type GeminiConfig = { apiKey?: string; model?: string; photoModel?: string; outfitModel?: string }
+
+export function geminiConfig(env: Record<string, string | undefined>): GeminiConfig {
+  return { apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL,
+    photoModel: env.GEMINI_PHOTO_MODEL, outfitModel: env.GEMINI_OUTFIT_MODEL }
+}
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
