@@ -20,7 +20,27 @@ test('handles invalid photos, missing credentials and ambiguous garments', async
   assert.equal((await suggestDetails({ photo }, {})).status, 503)
   const result = await suggestDetails({ photo }, { apiKey: 'test' }, async () =>
     Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ...shoe, category: 'Unknown' }) }] } }] }))
-  assert.equal(result.status, 502)
+  assert.equal(result.status, 200)
+  assert.equal('name' in result.body && result.body.name, shoe.name)
+  assert.equal('category' in result.body && result.body.category, undefined)
+  assert.match('notice' in result.body ? result.body.notice ?? '' : '', /category/)
+})
+
+test('retry a transient error once and distinguish quota, timeout, and invalid output', async () => {
+  let calls = 0
+  const config = { apiKey: 'test' }
+  const result = await suggestDetails({ photo }, config, async () => {
+    if (++calls === 1) return new Response(null, { status: 503 })
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(shoe) }] } }] })
+  })
+  assert.equal(result.status, 200)
+  assert.equal(calls, 2)
+  assert.equal((await suggestDetails({ photo }, config, async () => new Response(null, { status: 429 }))).status, 429)
+  assert.equal((await suggestDetails({ photo }, config, async () => {
+    throw new DOMException('timeout', 'TimeoutError')
+  })).status, 504)
+  const { body } = await suggestDetails({ photo }, config, async () => Response.json({}))
+  assert.equal('code' in body && body.code, 'invalid_response')
 })
 
 test('limits repeated calls across both AI endpoints and resets the window', () => {

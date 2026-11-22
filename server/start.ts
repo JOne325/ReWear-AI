@@ -4,6 +4,7 @@ import { createServer } from 'node:http'
 import { extname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { apiPaths, handleApi } from './api.ts'
+import { geminiConfig } from './gemini.ts'
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url))
 const assets = new Map<string, string>()
@@ -17,7 +18,7 @@ const types: Record<string, string> = {
   '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon',
 }
 const pages = new Set(['/', '/style', '/saved'])
-const config = { apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL }
+const config = geminiConfig(process.env)
 createServer((req, res) => {
   const path = (req.url ?? '').split('?')[0]
   if (apiPaths.includes(path)) {

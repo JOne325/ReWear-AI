@@ -38,3 +38,14 @@ Use Node 24. Run `npm ci` and `npm run build`, then `npm start`. Configure GEMIN
 ## Real-phone acceptance check
 
 Use four tops, four bottoms and four pairs of shoes. Record expected category and acceptable colors before testing. Include dark, patterned and low-contrast pieces. For each photo note category correct, color accepted, corrections, and time to save. Compare a few manual entries against assisted entries. Refresh to verify the saved corrections. Request both occasions, check all three photos belong to the closet, and record whether you would wear each look and which piece you would swap.
+
+### Model settings and photo previews
+
+The default is `gemini-3.5-flash`. Set `GEMINI_PHOTO_MODEL` or `GEMINI_OUTFIT_MODEL` in the server environment to override an individual feature. `GEMINI_MODEL` is their shared fallback. Restart the server after changing model settings.
+
+Fit whole garment keeps the full frame in a square tile. Edit a garment to replace either view or reclassify a jacket as Outerwear. Existing single photos appear as the front view, and Saved keeps the snapshots from the time of saving.
+
+### Follow-up experiments
+
+- Background removal: compare local segmentation on consenting sample front and back photos against the current full-frame preview. Check sleeves, trouser hems and similar foreground/background colors. Retain the original photo and offer the cutout as an optional preview.
+- One-jacket preview: evaluate a single jacket composite on a consenting or synthetic subject. Label it an approximate visualization and compare the rendered jacket shape and layering with the original photo.
