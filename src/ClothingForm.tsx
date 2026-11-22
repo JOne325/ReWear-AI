@@ -2,6 +2,12 @@ import { useState, type FormEvent } from 'react'
 import PhotoCrop from './PhotoCrop'
 import { clothingCategories, clothingNameLimit, type ClothingItem } from './wardrobe'
 
+function newGarmentId() {
+  // getRandomValues also works on the HTTP LAN origin used for phone testing.
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
 export default function ClothingForm({ initial, save, cancel }: {
   initial?: ClothingItem
   save: (item: ClothingItem) => Promise<void>
@@ -43,7 +49,7 @@ export default function ClothingForm({ initial, save, cancel }: {
     if (!name || !category) { setError('Enter a name and choose a category.'); return }
     setBusy(true)
     try {
-      await save({ id: initial?.id ?? crypto.randomUUID(), name, category, color: String(data.get('color')), photo })
+      await save({ id: initial?.id ?? newGarmentId(), name, category, color: String(data.get('color')), photo })
     } catch { setError('Could not save this garment. Try again.'); setBusy(false) }
   }
   return <section className="add-clothing"><h2>{initial ? 'Edit clothing' : 'Add clothing'}</h2>
