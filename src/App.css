@@ -5,3 +5,77 @@ nav { display: flex; gap: .25rem; }
 a { color: inherit; padding: .8rem .55rem; text-decoration: none; }
 a[aria-current] { text-decoration: underline; text-underline-offset: .4rem; }
 h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
+
+.closet-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.closet-filters button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: .5rem .9rem;
+  border: 1px solid #76877c;
+  border-radius: 999px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.closet-filters button[aria-pressed='true'] {
+  border-color: #1e362e;
+  color: #fff;
+  background: #1e362e;
+}
+
+.closet-filters button:focus-visible {
+  outline: 2px solid #1e362e;
+  outline-offset: 3px;
+}
+
+.closet-count {
+  margin: 1.5rem 0 .75rem;
+  color: #4d6257;
+  font-size: .875rem;
+}
+
+.closet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: .75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.clothing-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #bdc6b9;
+  border-radius: 1rem;
+  background: #fffefa;
+}
+
+.clothing-swatch {
+  flex: 0 0 3rem;
+  height: 3rem;
+  border: 1px solid #bdc6b9;
+  border-radius: .75rem;
+}
+
+.clothing-card h2 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.clothing-card p {
+  margin: .125rem 0 0;
+  color: #4d6257;
+  font-size: .875rem;
+}

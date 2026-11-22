@@ -1,7 +1,8 @@
 import './App.css'
+import Closet from './Closet'
 
 const sections = [
-  { path: '/', title: 'Closet', message: 'Your wardrobe is empty.' },
+  { path: '/', title: 'Closet' },
   { path: '/style', title: 'Style Me', message: 'Add clothing to your closet to start styling outfits.' },
   { path: '/saved', title: 'Saved', message: 'Your saved outfits will appear here.' },
 ]
@@ -17,7 +18,9 @@ export default function App() {
         </nav>
       </header>
       <main><h1>{current?.title ?? 'Page unavailable'}</h1>
-        <p>{current?.message ?? 'Choose a page from the navigation above.'}</p>
+        {current?.path === '/' ? <Closet /> : (
+          <p>{current?.message ?? 'Choose a page from the navigation above.'}</p>
+        )}
       </main>
     </>
   )
