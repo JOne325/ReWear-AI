@@ -3,9 +3,9 @@ import { test } from 'node:test'
 import { recommendOutfit } from './recommendations.ts'
 
 const items = [
-  { id: 'tee', name: 'White T-shirt', category: 'Tops' },
-  { id: 'jeans', name: 'Blue jeans', category: 'Bottoms' },
-  { id: 'shoes', name: 'White sneakers', category: 'Shoes' },
+  { id: 'tee', name: 'White T-shirt', category: 'Tops', color: '#ffffff' },
+  { id: 'jeans', name: 'Blue jeans', category: 'Bottoms', color: '#527ba1' },
+  { id: 'shoes', name: 'White sneakers', category: 'Shoes', color: '#ffffff' },
 ]
 const outfit = { itemIds: ['tee', 'jeans', 'shoes'], reason: 'A casual combination.' }
 const config = { apiKey: 'test-key' }
@@ -15,10 +15,15 @@ function providerResponse(value: unknown) {
 }
 
 test('returns an outfit containing only items sent from the closet', async () => {
+  let prompt: unknown
+  let apiKey: string | null = null
   const result = await recommendOutfit({ items }, config, async (_url, init) => {
-    assert.equal(new Headers(init?.headers).get('x-goog-api-key'), 'test-key')
+    apiKey = new Headers(init?.headers).get('x-goog-api-key')
+    prompt = JSON.parse(JSON.parse(String(init?.body)).contents[0].parts[0].text)
     return providerResponse(outfit)
   })
+  assert.equal(apiKey, 'test-key')
+  assert.deepEqual(prompt, items)
   assert.deepEqual(result, { status: 200, body: outfit })
 })
 

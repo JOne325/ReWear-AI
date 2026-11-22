@@ -20,7 +20,6 @@ export default function StyleMe() {
 
   const candidates = [...essentials, ...items.filter(item => !essentials.includes(item))]
     .slice(0, recommendationItemLimit)
-    .map(({ id, name, category }) => ({ id, name, category }))
 
   async function getRecommendation() {
     setPending(true)
@@ -45,18 +44,33 @@ export default function StyleMe() {
   return (
     <>
       <button className="action-button" disabled={pending} onClick={getRecommendation}>Suggest an outfit</button>
-      <p>Style Me sends clothing names and categories to Gemini to suggest an outfit.</p>
-      {pending && <p role="status">Putting together an outfit…</p>}
+      <p>Style Me sends clothing names, categories and colors to Gemini to suggest an outfit.</p>
       {error && <p role="alert">{error}</p>}
-      {outfit && (
-        <section aria-labelledby="suggested-outfit" aria-live="polite">
-          <h2 id="suggested-outfit">Suggested outfit</h2>
-          <ul>
-            {outfit.itemIds.map(id => <li key={id}>{items.find(item => item.id === id)?.name}</li>)}
-          </ul>
-          <p>{outfit.reason}</p>
-        </section>
-      )}
+      <div aria-live="polite">
+        {pending && <p>Putting together an outfit…</p>}
+        {outfit && (
+          <section aria-labelledby="suggested-outfit">
+            <h2 id="suggested-outfit">Suggested outfit</h2>
+            <ul className="outfit-items" role="list">
+              {outfit.itemIds.map(id => {
+                const item = items.find(candidate => candidate.id === id)
+                return item && (
+                  <li key={id}>
+                    <span
+                      className="clothing-swatch"
+                      style={{ backgroundColor: item.color }}
+                      role="img"
+                      aria-label={`Color ${item.color}`}
+                    />
+                    {item.name}
+                  </li>
+                )
+              })}
+            </ul>
+            <p>{outfit.reason}</p>
+          </section>
+        )}
+      </div>
     </>
   )
 }

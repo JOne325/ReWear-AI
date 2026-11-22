@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { clothingCategories, clothingNameLimit, recommendationItemLimit } from '../src/wardrobe.ts'
-import type { OutfitRecommendation, RecommendationItem } from '../src/wardrobe.ts'
+import type { ClothingItem, OutfitRecommendation } from '../src/wardrobe.ts'
 
 type GeminiConfig = { apiKey?: string; model?: string }
 
@@ -12,14 +12,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function isRecommendationItem(value: unknown): value is RecommendationItem {
+function isClothingItem(value: unknown): value is ClothingItem {
   return isRecord(value) &&
     typeof value.id === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(value.id) &&
     typeof value.name === 'string' && value.name.trim().length > 0 && value.name.length <= clothingNameLimit &&
-    clothingCategories.some(category => category === value.category)
+    clothingCategories.some(category => category === value.category) &&
+    typeof value.color === 'string' && /^#[0-9a-f]{6}$/i.test(value.color)
 }
 
-function isOutfit(value: unknown, items: RecommendationItem[]): value is OutfitRecommendation {
+function isOutfit(value: unknown, items: ClothingItem[]): value is OutfitRecommendation {
   if (!isRecord(value) || !Array.isArray(value.itemIds) || value.itemIds.length !== clothingCategories.length ||
       typeof value.reason !== 'string' || !value.reason.trim() || value.reason.length > maxReasonLength) {
     return false
@@ -40,11 +41,11 @@ function getCandidateText(data: unknown) {
 
 export async function recommendOutfit(input: unknown, config: GeminiConfig, send = fetch) {
   if (!isRecord(input) || !Array.isArray(input.items) || input.items.length > recommendationItemLimit ||
-      !input.items.every(isRecommendationItem)) {
+      !input.items.every(isClothingItem)) {
     return { status: 400, body: { error: 'Send a valid list of clothing items.' } }
   }
 
-  const items = input.items.map(({ id, name, category }) => ({ id, name, category }))
+  const items = input.items.map(({ id, name, category, color }) => ({ id, name, category, color }))
   if (new Set(items.map(item => item.id)).size !== items.length ||
       !clothingCategories.every(category => items.some(item => item.category === category))) {
     return { status: 400, body: { error: 'Your closet needs at least one top, one bottom and one pair of shoes.' } }

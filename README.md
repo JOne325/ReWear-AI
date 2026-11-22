@@ -19,7 +19,7 @@ Closet stores clothing in IndexedDB for the current browser and origin. Example 
 
 Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. Restart Vite after changing it. `GEMINI_MODEL` is optional.
 
-Style Me sends clothing names, categories and IDs to the server when you request an outfit. The server calls Gemini and checks that its suggested items belong to the submitted closet. Vite serves `POST /api/recommendations` in development and local preview. For deployment, the static build needs a server exposing the same endpoint.
+Style Me sends clothing names, categories, colors and IDs to the server when you request an outfit. The server calls Gemini and checks that its suggested items belong to the submitted closet. Vite serves `POST /api/recommendations` in development and local preview. For deployment, the static build needs a server exposing the same endpoint.
 
 Run `npm test` to check the recommendation contract with a simulated Gemini response.
 

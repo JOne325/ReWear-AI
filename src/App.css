@@ -134,3 +134,22 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
 .form-confirmation:empty {
   margin: 0;
 }
+
+.outfit-items {
+  padding: 0;
+  list-style: none;
+}
+
+.outfit-items li {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: .5rem 0;
+  overflow-wrap: anywhere;
+}
+
+.outfit-items .clothing-swatch {
+  flex-basis: 1.25rem;
+  height: 1.25rem;
+  border-radius: .25rem;
+}

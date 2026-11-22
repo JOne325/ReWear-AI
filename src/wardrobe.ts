@@ -11,8 +11,6 @@ export type ClothingItem = {
   color: string
 }
 
-export type RecommendationItem = Pick<ClothingItem, 'id' | 'name' | 'category'>
-
 export type OutfitRecommendation = {
   itemIds: string[]
   reason: string
