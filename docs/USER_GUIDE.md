@@ -43,4 +43,15 @@ Aim for two to three minutes. Start with enough saved garments to cover Tops, Bo
 2. Add a garment from a photo. Show the crop, request AI details, review the name, category and color, and save.
 3. Ask for a campus outfit. Follow up with a change, then show the updated outfit and reason.
 4. Save the outfit. In Saved, tap **I wore this**. Return to Closet to show the wear counts and ReWear Score.
-5. Open Style Me and explain the Closet gap calculation. Turn on airplane mode with the page open and show the offline message.
+5. Open Style Me and explain the Closet gap calculation. If time allows, end with a short clip of a completed Try-on preview.
+
+## Screenshots for the submission
+
+Use the same populated closet throughout. Capture these four screens:
+
+1. **Closet.** Show several garment photos and the 30-day ReWear Score after logging a wear.
+2. **Add garment.** Show the cropped photo and the suggested name, category and color before saving.
+3. **Style Me.** Show the request, outfit photos from the closet, and the explanation.
+4. **Saved.** Show the same outfit and the confirmation after tapping **I wore this**.
+
+For a fifth screenshot, show a completed **Try-on** preview using a photo you have permission to share.
