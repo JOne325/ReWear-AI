@@ -5,8 +5,8 @@ ReWear helps students wear more of the clothes they already own so they buy less
 ## Build and use your closet
 
 1. In Closet, tap **Add garment** or **Add your first garment**. Take a photo or choose one from your gallery.
-2. Choose **Fit whole garment**, **Manual crop**, or **AI smart crop**. Tap **Use front photo**.
-3. If you want help, tap **Suggest details from photo**. Check the name, category and color before you save.
+2. Choose **Fit whole garment**, **Manual crop**, or **AI smart crop**. Tap **Use front photo**. Choose **Edit photo** to rotate it or remove the background.
+3. If you want help, tap **Suggest name and details from photo**. Check the name, category and color before you save.
 4. Add at least one top, one garment in Bottoms, and one pair of shoes.
 5. In Style Me, choose **University** or **Interview** and tap **Suggest an outfit**. Tap **Try again** for another look.
 6. Tap **Save outfit**.
@@ -15,7 +15,7 @@ ReWear helps students wear more of the clothes they already own so they buy less
 
 ## Privacy
 
-Your closet and photos are stored on this device in this browser. Outfit requests send garment names, categories and colors, along with internal item IDs, the occasion and recent outfit IDs. When you tap Suggest details from photo, Gemini receives only the cropped photo you select. AI smart crop sends a resized view of the photo so Gemini can locate the garment.
+Your closet and photos are stored on this device in this browser. Outfit requests send garment names, categories and colors, along with internal item IDs, the occasion and recent outfit IDs. When you tap Suggest name and details from photo, Gemini receives only the cropped photo you select. AI smart crop sends a resized view of the photo so Gemini can locate the garment.
 
 ## Limits and tips
 

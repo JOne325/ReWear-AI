@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import PhotoCrop from './PhotoCrop'
+import { photoForDetails } from './photoFraming'
 import { friendlyError } from './errors'
 import { clothingCategories, clothingNameLimit, type ClothingItem } from './wardrobe'
 
@@ -29,6 +30,26 @@ export default function ClothingForm({ initial, save, cancel }: {
   const [notice, setNotice] = useState('')
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => { heading.current?.focus() }, [])
+
+  function handlePhotoConfirmed(view: 'Front' | 'Back', value: string, suggestedName?: string) {
+    if (view === 'Front') setPhoto(value)
+    else setBackPhoto(value)
+    if (view === 'Front' || !photo) setRecognitionView(view)
+    setNotice('')
+    if (suggestedName && !name.trim()) {
+      setName(suggestedName)
+      setNotice('Review the suggested name before saving.')
+    }
+  }
+
+  function handlePhotoRemoved(view: 'Front' | 'Back') {
+    if (view === 'Front') setPhoto(undefined)
+    else setBackPhoto(undefined)
+    if (recognitionView === view) setRecognitionView(view === 'Front' && backPhoto ? 'Back' : 'Front')
+    setNotice('')
+    setError('')
+  }
+
   async function analyze() {
     if (!selectedPhoto) return
     setError('')
@@ -36,7 +57,8 @@ export default function ClothingForm({ initial, save, cancel }: {
     setAnalyzing(true)
     try {
       const response = await fetch('/api/clothing-details', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ photo: selectedPhoto }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo: await photoForDetails(selectedPhoto) }),
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'Enter the garment details manually.')
@@ -63,17 +85,17 @@ export default function ClothingForm({ initial, save, cancel }: {
   return <section className="add-clothing"><h2 ref={heading} tabIndex={-1}>{initial ? 'Edit garment' : 'Add garment'}</h2>
     <form onSubmit={submit}><fieldset disabled={busy || analyzing}>
       <h3>Front photo</h3>
-      <PhotoCrop view="Front" onChange={value => { setPhoto(value); setRecognitionView('Front') }} onReady={setReady} />
+      <PhotoCrop view="Front" currentPhoto={photo} onChange={(value, title) => handlePhotoConfirmed('Front', value, title)} onRemove={() => handlePhotoRemoved('Front')} onReady={setReady} />
       {photo && ready && <img className="crop-preview" src={photo} alt="Confirmed front photo" />}
       <h3>Back photo (optional)</h3>
-      <PhotoCrop view="Back" onChange={value => { setBackPhoto(value); if (!photo) setRecognitionView('Back') }} onReady={setBackReady} />
+      <PhotoCrop view="Back" currentPhoto={backPhoto} onChange={(value, title) => handlePhotoConfirmed('Back', value, title)} onRemove={() => handlePhotoRemoved('Back')} onReady={setBackReady} />
       {backPhoto && backReady && <img className="crop-preview" src={backPhoto} alt="Confirmed back photo" />}
       {(photo || backPhoto) && ready && backReady && <>
         {photo && backPhoto && <label>Photo for suggestions<select value={recognitionView}
           onChange={event => setRecognitionView(event.target.value === 'Back' ? 'Back' : 'Front')}>
           <option>Front</option><option>Back</option></select></label>}
         <p>This sends the selected cropped photo to Gemini.</p>
-        <button type="button" disabled={!selectedPhoto?.startsWith('data:image/jpeg;base64,')} onClick={analyze}>Suggest details from photo</button>
+        <button type="button" disabled={!selectedPhoto} onClick={analyze}>Suggest name and details from photo</button>
       </>}
       {analyzing && <p role="status">Checking photo…</p>}
       {notice && <p role="status">{notice}</p>}

@@ -2,8 +2,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { GeminiConfig } from './gemini.ts'
 import { recommendOutfit } from './recommendations.ts'
 import { suggestDetails } from './details.ts'
+import { removePhotoBackground } from './cutout.ts'
 
-export const apiPaths = ['/api/clothing-details', '/api/recommendations']
+export const apiPaths = ['/api/clothing-details', '/api/recommendations', '/api/clothing-cutout']
 const counts = new Map<string, number>()
 let resetAt = 0
 let total = 0
@@ -26,8 +27,10 @@ function respond(response: ServerResponse, status: number, body: unknown) {
 }
 
 export async function handleApi(request: IncomingMessage, response: ServerResponse, config: GeminiConfig) {
-  const photo = request.url?.split('?')[0] === '/api/clothing-details'
-  const maxBodyBytes = photo ? 512 * 1024 : 64 * 1024
+  const path = request.url?.split('?')[0]
+  const cutout = path === '/api/clothing-cutout'
+  const photo = path === '/api/clothing-details'
+  const maxBodyBytes = photo || cutout ? 512 * 1024 : 64 * 1024
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST')
     respond(response, 405, { error: 'Use POST for this request.' })
@@ -39,7 +42,7 @@ export async function handleApi(request: IncomingMessage, response: ServerRespon
     return
   }
 
-  if (!admit(request.socket.remoteAddress || 'local')) {
+  if (!cutout && !admit(request.socket.remoteAddress || 'local')) {
     response.setHeader('Retry-After', '60')
     respond(response, 429, { error: 'Too many requests. Try again in a minute.' })
     return
@@ -63,6 +66,8 @@ export async function handleApi(request: IncomingMessage, response: ServerRespon
     return
   }
 
-  const { status, body } = await (photo ? suggestDetails : recommendOutfit)(input, config)
+  const { status, body } = cutout
+    ? await removePhotoBackground(input)
+    : await (photo ? suggestDetails : recommendOutfit)(input, config)
   respond(response, status, body)
 }

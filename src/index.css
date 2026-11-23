@@ -1,21 +1,13 @@
-:root {
-  --font-heading: 'Newsreader', Georgia, serif;
-  --font-body: 'Manrope', system-ui, sans-serif;
-  --ink: #211b2b;
-  --muted: #51485d;
-  --primary: #5c35ba;
-  --on-primary: #fff;
-  --page: #faf8fe;
-  --card: #fffefa;
-  --linen: #eeeae1;
-  --border: #d3cadb;
-  --control-border: #7a7188;
-  --radius-card: 1rem;
-  --space-card: 1rem;
-  font-family: var(--font-body);
-  color: var(--ink);
-  background: var(--page);
-}
-
+:root { font-family: system-ui, sans-serif; color: #1e362e; background: #f7f6ef; }
 body { margin: 0; }
 * { box-sizing: border-box; }
+
+:root {
+  --font-heading: Georgia, serif;
+  --primary: #1e362e;
+  --muted: #4d6257;
+  --border: #bdc6b9;
+  --card: #fffefa;
+  --radius-card: 1rem;
+  --space-card: 1rem;
+}

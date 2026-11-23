@@ -151,3 +151,27 @@ test('reports provider downtime when the one retry also returns 503', async () =
   assert.equal(result.status, 503)
   assert.match('error' in result.body ? result.body.error ?? '' : '', /temporarily unavailable/i)
 })
+
+test('returns a friendly quota error when all configured outfit models hit quota', async () => {
+  let requests = 0
+  const result = await recommendOutfit({ items }, {
+    ...config, model: 'gemini-3.8-flash', fallbackModels: ['gemini-3.6-flash'],
+  }, async () => {
+    requests++
+    return new Response(null, { status: 429 })
+  })
+  assert.equal(requests, 2)
+  assert.equal(result.status, 429)
+})
+
+test('does not switch outfit models for an authentication failure', async () => {
+  let requests = 0
+  const result = await recommendOutfit({ items }, {
+    ...config, fallbackModels: ['gemini-3.6-flash'],
+  }, async () => {
+    requests++
+    return new Response(null, { status: 403 })
+  })
+  assert.equal(requests, 1)
+  assert.equal(result.status, 502)
+})

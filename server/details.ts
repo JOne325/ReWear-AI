@@ -1,5 +1,5 @@
 import { clothingCategories, clothingNameLimit } from '../src/wardrobe.ts'
-import { getCandidateText, isRecord, type GeminiConfig } from './gemini.ts'
+import { generateWithModelFallback, getCandidateText, isRecord, type GeminiConfig } from './gemini.ts'
 
 export type CropBox = {
   ymin: number
@@ -39,9 +39,6 @@ export async function suggestDetails(input: unknown, config: GeminiConfig, send 
     return { status: 503, body: { error: 'Photo suggestions are unavailable. Enter the details manually.' } }
   }
 
-  const model = encodeURIComponent(config.photoModel || config.model || 'gemini-2.5-flash')
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
-
   const viewHint = view
     ? `This photo is intended to show the ${view} view of the garment.`
     : 'Determine whether this shows the front or back of the garment when clear.'
@@ -49,11 +46,12 @@ export async function suggestDetails(input: unknown, config: GeminiConfig, send 
   const prompt = [
     'Identify the main clothing garment in the photo.',
     viewHint,
-    'Suggest a short descriptive name including visible pattern or material when clear, category, dominant color as #RRGGBB, detected view ("front", "back", or "unknown"), and a tight bounding box [ymin, xmin, ymax, xmax] on a 0-1000 scale framing the garment.',
+    'Use a short closet title in natural language, such as "Maroon cable-knit sweater", based on visible color and garment type. Include a distinctive pattern or texture only when clear. Leave the name blank if you cannot identify the garment. Do not guess brands.',
+    'Also return the category, dominant color as #RRGGBB, detected view ("front", "back", or "unknown"), and a tight bounding box [ymin, xmin, ymax, xmax] on a 0-1000 scale framing the garment.',
     'Classify jackets and coats as Outerwear. Choose Unknown if uncertain about the category, and still give the name and color when recognizable.',
   ].join(' ')
 
-  const body = JSON.stringify({
+  const body = {
     contents: [{
       parts: [
         { text: prompt },
@@ -77,22 +75,11 @@ export async function suggestDetails(input: unknown, config: GeminiConfig, send 
         },
       },
     },
-  })
-
-  const request = () => send(url, {
-    method: 'POST',
-    body,
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.apiKey! },
-    signal: AbortSignal.timeout(25_000),
-  })
+  }
 
   let response: Response
   try {
-    response = await request()
-    if ([500, 502, 503, 504].includes(response.status)) {
-      await response.body?.cancel()
-      response = await request()
-    }
+    response = await generateWithModelFallback(config, config.photoModel, body, send, [500, 502, 503, 504])
   } catch (cause) {
     if (cause instanceof Error && cause.name === 'TimeoutError') {
       return { status: 504, body: { code: 'timeout', error: 'Photo analysis timed out. Try again or enter details manually.' } }
