@@ -19,7 +19,15 @@ Open the URL printed by Vite, then choose **Open your closet**. If you already h
 
 You can explore the demo wardrobe, add and edit garments manually, use the photo editor, and get basic outfit ideas from Style Me without credentials. The first background removal downloads its model and can take longer. Closet and Saved data stay in IndexedDB for the current browser and origin. Use the same URL when returning to your closet.
 
-To test on a phone on the same network, start Vite with `npm run dev -- --host` and open its **Network** URL on the phone. An HTTPS host is needed to test installation from another device.
+To test on a phone on the same network, start Vite with `npm run dev -- --host` and open its **Network** URL on the phone.
+
+## Use one URL from home or away
+
+For private access from Wi-Fi or cellular, connect the host computer and the phone to the same Tailscale network. On the host, [run the built ReWear app](#run-the-production-server) on port `3000`. Keep the host awake and online, and keep the Python service running if you want Try-on.
+
+In an Administrator terminal on Windows, run `tailscale serve --bg 3000`. If Tailscale prompts you to enable HTTPS, approve it in your Tailscale account. Use `tailscale serve status` to find your private `https://…ts.net` URL. Bookmark that URL and use it both at home and away while Tailscale is connected. [Tailscale Serve setup](https://tailscale.com/docs/features/tailscale-serve)
+
+While HTTPS approval is pending, you can test at `http://<host-tailscale-ip>:3000` from a connected device. Run `tailscale ip -4` on the host to get its address. The local network, Tailscale HTTP, and Tailscale HTTPS addresses each have their own browser storage. Use the same address, browser, and device to return to the same closet and saved outfits.
 
 ## Style Me setup
 

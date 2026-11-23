@@ -28,7 +28,9 @@ python -c "from getpass import getpass; from huggingface_hub import login; login
 python -m uvicorn main:app --app-dir vton_service --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-Set `VTON_SERVICE_URL=http://127.0.0.1:8000` in the ReWear project's `.env.local` and restart Vite. Check `http://127.0.0.1:8000/health` for `{"configured":true}`. A hosted Python service can use a server-only `HF_TOKEN`. A custom Gradio provider can be set through `VTON_URL` and must expose a compatible `/tryon` endpoint.
+Set `VTON_SERVICE_URL=http://127.0.0.1:8000` in the ReWear project's `.env.local` and restart ReWear. Check `http://127.0.0.1:8000/health` on the host for `{"configured":true}`, then check `/api/tryon` on the ReWear address in your browser for the same response. These checks confirm the services have their URLs configured. Generate a preview to verify the GPU connection.
+
+When using [ReWear over Tailscale](../README.md#use-one-url-from-home-or-away), open the ReWear URL on your phone. The Node server reaches Python on port `8000` on the host. A hosted Python service can use a server-only `HF_TOKEN`. A custom Gradio provider can be set through `VTON_URL` and must expose a compatible `/tryon` endpoint.
 
 Open **Try-on** in ReWear. Choose a person photo and a separate photo of a top, add an optional description, and select **Generate preview**. Canceling stops the request and asks the upstream job to cancel. A remote request that has already started may finish on the provider. The preview is a visual approximation.
 
