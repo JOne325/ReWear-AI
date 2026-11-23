@@ -1,74 +1,191 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useClothing } from './useClothing'
 import { mockClothing } from './mockClothing'
-import { putOutfit } from './clothingStorage'
+import { getOutfit, putOutfit } from './clothingStorage'
 import { nextCombination } from './rotation'
 import OutfitBoard from './OutfitBoard'
-import { baseCategories, occasions, type Occasion, type OutfitRecommendation } from './wardrobe'
+import {
+  baseCategories, clothingCategories, occasions,
+  type ClothingCategory, type ClothingItem, type Occasion, type OutfitRecommendation, type SavedOutfit,
+} from './wardrobe'
+
+const slots: Record<ClothingCategory, string> = {
+  Tops: 'Top', Bottoms: 'Bottoms', Shoes: 'Shoes', Outerwear: 'Outerwear',
+}
+
+function outfitHistory(key: string): string[] {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(key) ?? '[]')
+    return Array.isArray(stored) ? stored.filter((entry): entry is string => typeof entry === 'string') : []
+  } catch {
+    return []
+  }
+}
 
 export default function StyleMe() {
   const { items, loadError } = useClothing()
-  const [occasion, setOccasion] = useState<Occasion>('University')
-  const [busy, setBusy] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
-  const [outfit, setOutfit] = useState<OutfitRecommendation | null>(null)
+  const params = new URLSearchParams(window.location.search)
+  const remixId = params.get('remix')
+  const pieceId = params.get('piece')
+  const [remix, setRemix] = useState<SavedOutfit | null | undefined>(remixId ? undefined : null)
+
+  useEffect(() => {
+    if (!remixId) return
+    let active = true
+    void getOutfit(remixId).then(
+      result => { if (active) setRemix(result ?? null) },
+      () => { if (active) setRemix(null) },
+    )
+    return () => { active = false }
+  }, [remixId])
+
   if (loadError) return <p role="alert">Could not open your closet. Reload to try again.</p>
-  if (!items) return <p role="status">Loading your closet…</p>
+  if (!items || remix === undefined) return <p role="status">Loading your wardrobe…</p>
+
   const demo = items.length === 0
   const closet = demo ? mockClothing : items
-  const groups = baseCategories.map(category => closet.filter(item => item.category === category))
-  if (groups.some(group => !group.length)) return <p>Add a top, bottoms and shoes to your closet to start styling outfits.</p>
-  const pieces = outfit?.itemIds.flatMap(id => closet.filter(item => item.id === id)) ?? []
-  const onlyOne = groups.every(group => group.length === 1)
+  const pin = closet.find(item => item.id === pieceId)
+  const canRemix = remix && remix.pieces.every(piece =>
+    closet.some(item => item.id === piece.id && item.category === piece.category))
+  const missingRemix = remixId && !canRemix
+
+  return <>
+    {missingRemix && <p role="status">This saved look is unavailable to remix. You can start a fresh outfit from your current wardrobe.</p>}
+    {pieceId && !pin && <p role="status">That piece is no longer in your wardrobe. You can still style another outfit.</p>}
+    <OutfitEditor closet={closet} demo={demo} pin={pin} remix={canRemix ? remix : null} />
+  </>
+}
+
+function OutfitEditor({ closet, demo, pin, remix }: {
+  closet: ClothingItem[]
+  demo: boolean
+  pin?: ClothingItem
+  remix: SavedOutfit | null
+}) {
+  const [occasion, setOccasion] = useState<Occasion>(remix?.occasion ?? 'University')
+  const [pending, setPending] = useState<'suggest' | 'save' | null>(null)
+  const [saved, setSaved] = useState(Boolean(remix))
+  const [error, setError] = useState('')
+  const [outfit, setOutfit] = useState<OutfitRecommendation | null>(
+    remix ? { itemIds: remix.pieces.map(piece => piece.id), reason: remix.reason } : null)
+  const eligible = pin ? closet.filter(item => item.category !== pin.category || item.id === pin.id) : closet
+  const missing = baseCategories.filter(category => !eligible.some(item => item.category === category))
+  const pieces = clothingCategories.flatMap(category => closet.filter(item =>
+    item.category === category && outfit?.itemIds.includes(item.id)))
+  const onlyOne = baseCategories.every(category => eligible.filter(item => item.category === category).length === 1)
+  const swappable = clothingCategories.flatMap(category => {
+    if (pin?.category === category) return []
+    const choices = eligible.filter(item => item.category === category)
+    return choices.length >= (category === 'Outerwear' ? 1 : 2) ? [{ category, choices }] : []
+  })
+
+  if (missing.length) return <section>
+    <h2>Finish your wardrobe</h2>
+    <p>Add these categories to build an outfit: {missing.join(', ')}.</p>
+    <a className="action-button text-action" href="/?add">Add clothing</a>
+  </section>
 
   async function suggest() {
-    setBusy(true); setError('')
+    setPending('suggest')
+    setError('')
+    const scope = pin && pin.category !== 'Outerwear' ? ':piece:' + pin.id : ''
+    const key = 'rewear:shown:' + (demo ? 'demo:' : 'closet:') + occasion + scope
+    const choice = nextCombination(eligible, outfitHistory(key))
     try {
-      const key = 'rewear:shown:' + (demo ? 'demo:' : 'closet:') + occasion
-      const stored: unknown = JSON.parse(localStorage.getItem(key) ?? '[]')
-      const history = Array.isArray(stored) ? stored.filter((entry): entry is string => typeof entry === 'string') : []
-      const choice = nextCombination(closet, history)
       if (!choice) return
       const candidates = choice.pieces
+      let result: OutfitRecommendation
       if (demo) {
         const [top, bottom, shoes] = candidates
-        setOutfit({ itemIds: candidates.map(item => item.id), reason: occasion === 'Interview'
+        result = { itemIds: candidates.map(item => item.id), reason: occasion === 'Interview'
           ? top.name + ' and ' + bottom.name + ' make a casual interview outfit. Check whether the dress code allows sneakers.'
-          : top.name + ' pairs with ' + bottom.name + ' for classes, and ' + shoes.name + ' keep the look casual.' })
+          : top.name + ' pairs with ' + bottom.name + ' for classes, and ' + shoes.name + ' keep the look casual.' }
       } else {
-        const response = await fetch('/api/recommendations', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ occasion, items: candidates.map(({ id, name, category, color }) => ({ id, name, category, color })) }) })
-        const result = await response.json()
-        if (!response.ok) throw new Error(result.error || 'Could not get an outfit.')
-        setOutfit(result)
+        const response = await fetch('/api/recommendations', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ occasion, items: candidates.map(({ id, name, category, color }) => ({ id, name, category, color })) }),
+        })
+        const data: OutfitRecommendation & { error?: string } = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Could not get an outfit.')
+        result = data
+        if (pin?.category === 'Outerwear' && !result.itemIds.includes(pin.id)) {
+          result = { itemIds: [...result.itemIds, pin.id], reason: result.reason + ' You chose ' + pin.name + ' as the outer layer.' }
+        }
       }
-      localStorage.setItem(key, JSON.stringify(choice.history))
+      setOutfit(result)
       setSaved(false)
-    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Try again.') }
-    finally { setBusy(false) }
+      try { localStorage.setItem(key, JSON.stringify(choice.history)) } catch { /* The outfit is still usable. */ }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Try again.')
+    } finally {
+      setPending(null)
+    }
+  }
+
+  function swap(category: ClothingCategory, id: string) {
+    const replacement = eligible.find(item => item.category === category && item.id === id)
+    if (!replacement && (category !== 'Outerwear' || id)) return
+    const next = pieces.filter(item => item.category !== category)
+    if (replacement) next.push(replacement)
+    setOutfit({ itemIds: next.map(item => item.id), reason: '' })
+    setError('')
+    setSaved(false)
+  }
+
+  async function save() {
+    setPending('save')
+    setError('')
+    try {
+      const itemIds = pieces.map(item => item.id)
+      await putOutfit({
+        id: JSON.stringify(occasion === 'University' ? itemIds : [occasion, ...itemIds]),
+        itemIds, pieces, occasion, savedAt: Date.now(), reason: outfit?.reason || 'Customized in Style Me.',
+      })
+      setSaved(true)
+    } catch {
+      setError('Could not save this outfit. Try again.')
+    } finally {
+      setPending(null)
+    }
   }
 
   return <>
-    <label>Occasion <select value={occasion} disabled={busy} onChange={event => {
+    {pin && <p>Styling <strong className="pinned-piece">{pin.name}</strong>. <a className="text-action" href="/style">Unpin garment</a></p>}
+    <label className="occasion-control">Occasion <select value={occasion} disabled={pending !== null} onChange={event => {
       setOccasion(event.target.value as Occasion)
       setOutfit(null)
       setError('')
       setSaved(false)
-    }}>{occasions.map(value => <option key={value}>{value}</option>)}</select></label><p>{demo ? 'Using the six-piece demo wardrobe.' : 'Style Me shares garment names, categories and colors with Gemini.'}</p>
-    {onlyOne && <p>Your closet has one base outfit. Add another top, bottoms or pair of shoes for more combinations.</p>}
-    <button className="action-button" disabled={busy} onClick={suggest}>{outfit ? 'Try Again' : 'Suggest an outfit'}</button>
+    }}>{occasions.map(value => <option key={value}>{value}</option>)}</select></label>
+    <p>{demo ? 'Using the demo wardrobe.' : 'Style Me shares garment names, categories and colors with Gemini.'}</p>
+    {onlyOne && <p>{pin ? 'Only one base outfit matches this pinned piece.' : 'Your closet has one base outfit.'} Add more pieces for more combinations.</p>}
+    <button className="action-button" disabled={pending !== null} onClick={suggest}>{outfit ? 'Try Again' : 'Suggest an outfit'}</button>
     {error && <p role="alert">{error}</p>}
-    {busy && !outfit && <p role="status">Finding an outfit…</p>}
-    {outfit && <section aria-label="Suggested outfit"><OutfitBoard pieces={pieces} /><p>{outfit.reason}</p>
-      <button className="action-button" disabled={busy || saved} onClick={async () => {
-        setBusy(true); setError('')
-        try {
-          await putOutfit({ ...outfit, id: JSON.stringify(occasion === 'University' ? pieces.map(item => item.id) : [occasion, ...pieces.map(item => item.id)]), pieces, occasion, savedAt: Date.now() })
-          setSaved(true)
-        } catch { setError('Could not save this outfit. Try again.') }
-        finally { setBusy(false) }
-      }}>{saved ? 'Outfit saved' : 'Save outfit'}</button>
+    {pending === 'suggest' && <p role="status">Finding an outfit…</p>}
+    {outfit && <section aria-label="Suggested outfit" className="outfit-editor">
+      <OutfitBoard pieces={pieces} />
+      <div>
+        {outfit.reason && <p>{outfit.reason}</p>}
+        <fieldset className="swap-controls" disabled={pending !== null}>
+          <legend>Swap a piece</legend>
+          {swappable.map(({ category, choices }) =>
+            <label key={category}>
+              {slots[category]}
+              <select aria-label={'Swap ' + slots[category].toLowerCase()}
+                value={pieces.find(item => item.category === category)?.id ?? ''}
+                onChange={event => swap(category, event.target.value)}>
+                {category === 'Outerwear' && <option value="">No outerwear</option>}
+                {choices.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+          )}
+          {!swappable.length && <p>Add another garment to swap pieces.</p>}
+        </fieldset>
+        <div className="actions">
+          <button className="action-button" disabled={pending !== null || saved} onClick={save}>{saved ? 'Outfit saved' : 'Save outfit'}</button>
+          {saved && <a className="text-action" href="/saved">View saved outfits</a>}
+        </div>
+      </div>
     </section>}
   </>
 }

@@ -13,13 +13,14 @@ export default function Saved() {
   return <>
     {error && <p role="alert">{error}</p>}
     {!outfits && !error && <p role="status">Loading outfits…</p>}
-    {outfits?.length === 0 && <p>Save an outfit from Style Me to see it here.</p>}
+    {outfits?.length === 0 && <p>Save an outfit from <a className="text-action" href="/style">Style Me</a> to see it here.</p>}
     {outfits?.map(outfit => <article className="saved-outfit" key={outfit.id}>
       <h2>{outfit.occasion}</h2><OutfitBoard pieces={outfit.pieces} /><p>{outfit.reason}</p>
+      <div className="actions"><a className="action-button" href={'/style?' + new URLSearchParams({ remix: outfit.id })}>Remix outfit</a>
       <button onClick={async () => {
         try { await removeOutfit(outfit.id); setOutfits(current => current?.filter(row => row.id !== outfit.id) ?? []) }
         catch { setError('Could not remove the outfit.') }
-      }}>Remove outfit</button>
+      }}>Remove outfit</button></div>
     </article>)}
   </>
 }

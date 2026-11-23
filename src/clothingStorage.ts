@@ -34,5 +34,6 @@ export const listClothing = () => transact<ClothingItem[]>('clothing', 'readonly
 export const putClothing = (item: ClothingItem) => transact('clothing', 'readwrite', table => table.put(item))
 export const removeClothing = (id: string) => transact('clothing', 'readwrite', table => table.delete(id))
 export const listOutfits = () => transact<SavedOutfit[]>('outfits', 'readonly', table => table.getAll())
+export const getOutfit = (id: string) => transact<SavedOutfit | undefined>('outfits', 'readonly', table => table.get(id))
 export const putOutfit = (outfit: SavedOutfit) => transact('outfits', 'readwrite', table => table.put(outfit))
 export const removeOutfit = (id: string) => transact('outfits', 'readwrite', table => table.delete(id))

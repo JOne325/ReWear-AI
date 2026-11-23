@@ -125,8 +125,8 @@ export async function suggestDetails(input: unknown, config: GeminiConfig, send 
         name: name || undefined,
         category,
         color,
-        detectedView,
-        cropBox,
+        ...(detectedView ? { detectedView } : {}),
+        ...(cropBox ? { cropBox } : {}),
         ...(missing.length
           ? { notice: `Gemini was unsure about: ${missing.join(', ')}. Review and complete those fields manually.` }
           : {}),
