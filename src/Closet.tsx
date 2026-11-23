@@ -39,13 +39,18 @@ export default function Closet() {
       <div><dt>ReWear Score</dt><dd>{score}%</dd>
         <dd className="score-caption">of your closet worn in the last 30 days</dd></div>
     </dl>}
-    <div className="closet-toolbar"><div className="closet-filters" role="group" aria-label="Filter clothing by category">
-      {filters.map(filter => <button key={filter} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}
-    </div><button className="action-button" onClick={() => setEditing('new')}>{demo ? 'Add your first garment' : 'Add garment'}</button></div>
+    <div className="closet-toolbar">
+      <button className="action-button add-garment-button" onClick={() => setEditing('new')}>
+        <span aria-hidden="true">+</span>{demo ? 'Add your first garment' : 'Add garment'}
+      </button>
+      <div className="closet-filters" role="group" aria-label="Filter clothing by category">
+        {filters.map(filter => <button key={filter} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}
+      </div>
+    </div>
     {demo ? <p className="closet-count">Demo wardrobe</p> :
       category !== 'All' && <p className="closet-count" role="status">{visible.length} {visible.length === 1 ? 'item' : 'items'}</p>}
-    <p role="status">{notice}</p>
-    {!visible.length && <p>No items in this category yet. Add a garment or choose another category.</p>}
+    <p className="form-confirmation" role="status">{notice}</p>
+    {!visible.length && <p className="empty-state">No items in this category yet. Add a garment or choose another category.</p>}
     <ul className="closet-grid" aria-label="Clothing items" role="list">{visible.map(item => <li className="clothing-card" key={item.id}>
       <GarmentImage item={item} /><div><small>{item.category}</small><h2>{item.name}</h2>
       {!demo && <>

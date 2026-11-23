@@ -175,3 +175,82 @@ test('does not switch outfit models for an authentication failure', async () => 
   assert.equal(requests, 1)
   assert.equal(result.status, 502)
 })
+
+test('sends style requests as data while keeping the closet payload unchanged', async () => {
+  const result = await recommendOutfit({
+    items, occasion: 'Interview',
+    styleRequest: { current: '  Keep the shirt, but make it warmer. ', previous: 'Interview with the white shirt.' },
+  }, config, async (_url, init) => {
+    const prompt = JSON.parse(String(init?.body))
+    assert.match(prompt.systemInstruction.parts[0].text, /styling preferences/)
+    assert.deepEqual(JSON.parse(prompt.contents[0].parts[0].text), items)
+    assert.deepEqual(JSON.parse(prompt.contents[0].parts[1].text), {
+      current: 'Keep the shirt, but make it warmer.',
+      previous: 'Interview with the white shirt.',
+    })
+    return providerResponse(outfit)
+  })
+  assert.equal(result.status, 200)
+})
+
+test('rejects missing or oversized style requests before calling Gemini', async () => {
+  for (const styleRequest of ['', { current: ' ' }, { current: 'a'.repeat(301) }, { current: 'Warm outfit', previous: 42 }]) {
+    const result = await recommendOutfit({ items, styleRequest }, config, async () => {
+      assert.fail('Invalid style request must not reach Gemini')
+    })
+    assert.equal(result.status, 400)
+  }
+})
+
+test('prioritizes garments that match the request when the closet exceeds the limit', () => {
+  const closet: ClothingItem[] = [
+    ...Array.from({ length: recommendationItemLimit }, (_, i): ClothingItem => ({
+      id: 'top-' + i, name: 'T-shirt', category: 'Tops', color: '#ffffff',
+    })),
+    { id: 'bottoms', name: 'Trousers', category: 'Bottoms', color: '#111111' },
+    { id: 'shoes', name: 'Shoes', category: 'Shoes', color: '#111111' },
+    { id: 'raincoat', name: 'Waterproof raincoat', category: 'Outerwear', color: '#222222' },
+  ]
+  const selected = selectRecommendationItems(closet, { current: 'A waterproof outfit, please' })
+  assert.equal(selected.length, recommendationItemLimit)
+  assert.ok(selected.some(item => item.id === 'raincoat'))
+  assert.ok(selected.some(item => item.id === 'bottoms'))
+  assert.ok(selected.some(item => item.id === 'shoes'))
+})
+
+test('an empty closet can get a full outfit based only on a free-form request', async () => {
+  const result = await recommendOutfit({ items: [], styleRequest: { current: 'What should I wear to a summer wedding?' } }, config,
+    async (_url, init) => {
+      const payload = JSON.parse(String(init?.body))
+      assert.doesNotMatch(payload.systemInstruction.parts[0].text, /selected occasion: University/)
+      return providerResponse({
+        itemIds: [], reason: 'Light fabrics and simple shoes suit a summer wedding.',
+        missingItems: [
+          { category: 'Tops', name: 'Linen button-down' },
+          { category: 'Bottoms', name: 'Light chinos' },
+          { category: 'Shoes', name: 'Brown loafers' },
+        ],
+      })
+    })
+  assert.equal(result.status, 200)
+  assert.equal('missingItems' in result.body ? result.body.missingItems?.length : 0, 3)
+})
+
+test('mixes owned garments and pieces to find when the closet is incomplete', async () => {
+  const result = await recommendOutfit({ items: [items[0]], styleRequest: { current: 'Put together a café outfit.' } }, config,
+    async () => providerResponse({
+      itemIds: ['tee'], reason: 'A white tee can anchor the outfit.',
+      missingItems: [{ category: 'Bottoms', name: 'Dark jeans' }],
+    }))
+  assert.equal(result.status, 200)
+  assert.deepEqual('itemIds' in result.body && result.body.itemIds, ['tee'])
+  assert.deepEqual('missingItems' in result.body && result.body.missingItems?.map(item => item.category), ['Bottoms', 'Shoes'])
+})
+
+test('falls back to an honest outfit idea when Gemini returns an unknown garment ID', async () => {
+  const result = await recommendOutfit({ items: [items[0]], styleRequest: { current: 'Warm travel outfit.' } }, config,
+    async () => providerResponse({ itemIds: ['invented'], reason: 'The invented item is perfect.' }))
+  assert.equal(result.status, 200)
+  assert.deepEqual('itemIds' in result.body && result.body.itemIds, ['tee'])
+  assert.ok('notice' in result.body && result.body.notice)
+})

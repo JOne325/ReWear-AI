@@ -1,10 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { GeminiConfig } from './gemini.ts'
+import { geminiConfig, type GeminiConfig } from './gemini.ts'
+import { renderTryOn, tryOnBodyLimit, tryOnEndpoint } from './tryon.ts'
 import { recommendOutfit } from './recommendations.ts'
 import { suggestDetails } from './details.ts'
 import { removePhotoBackground } from './cutout.ts'
 
-export const apiPaths = ['/api/clothing-details', '/api/recommendations', '/api/clothing-cutout']
+export const apiPaths = ['/api/clothing-details', '/api/recommendations', '/api/clothing-cutout', '/api/tryon']
 const counts = new Map<string, number>()
 let resetAt = 0
 let total = 0
@@ -26,11 +27,22 @@ function respond(response: ServerResponse, status: number, body: unknown) {
   response.end(JSON.stringify(body))
 }
 
-export async function handleApi(request: IncomingMessage, response: ServerResponse, config: GeminiConfig) {
+type ApiConfig = GeminiConfig & { tryOnService?: string }
+
+export function apiConfig(env: Record<string, string | undefined>): ApiConfig {
+  return { ...geminiConfig(env), tryOnService: env.VTON_SERVICE_URL }
+}
+
+export async function handleApi(request: IncomingMessage, response: ServerResponse, config: ApiConfig) {
   const path = request.url?.split('?')[0]
   const cutout = path === '/api/clothing-cutout'
   const photo = path === '/api/clothing-details'
-  const maxBodyBytes = photo || cutout ? 512 * 1024 : 64 * 1024
+  const tryOn = path === '/api/tryon'
+  if (tryOn && request.method === 'GET') {
+    respond(response, 200, { configured: Boolean(tryOnEndpoint(config.tryOnService)) })
+    return
+  }
+  const maxBodyBytes = tryOn ? tryOnBodyLimit : photo || cutout ? 512 * 1024 : 64 * 1024
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST')
     respond(response, 405, { error: 'Use POST for this request.' })
@@ -63,6 +75,26 @@ export async function handleApi(request: IncomingMessage, response: ServerRespon
     input = JSON.parse(Buffer.concat(chunks).toString('utf8'))
   } catch {
     respond(response, 400, { error: 'The request must be valid JSON.' })
+    return
+  }
+
+  if (tryOn) {
+    if (response.destroyed) return
+    const controller = new AbortController()
+    const close = () => controller.abort()
+    response.once('close', close)
+    try {
+      const result = await renderTryOn(input, config.tryOnService, controller.signal)
+      if (response.destroyed) return
+      if ('image' in result) {
+        response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' })
+        response.end(result.image)
+      } else {
+        respond(response, result.status, { error: result.error })
+      }
+    } finally {
+      response.off('close', close)
+    }
     return
   }
 
