@@ -64,8 +64,9 @@ function OutfitEditor({ closet, demo }: { closet: ClothingItem[]; demo: boolean 
   const pieces = clothingCategories.flatMap(category => closet.filter(item =>
     item.category === category && outfit?.itemIds.includes(item.id)))
   const gap = demo ? null : biggestGap(closet)
-  const offlineHint = offline && !demo &&
-    <p role="status">You are offline. Your closet is available, but suggestions need internet.</p>
+  const offlineHint = offline && <p role="status">{demo
+    ? 'You are offline. Demo outfits are still available. Personal suggestions need internet.'
+    : 'You are offline. Your closet is available, but suggestions need internet.'}</p>
 
   async function suggest() {
     setPending('suggest')

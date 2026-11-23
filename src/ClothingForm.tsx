@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import PhotoCrop from './PhotoCrop'
 import { friendlyError } from './errors'
 import { clothingCategories, clothingNameLimit, type ClothingItem } from './wardrobe'
@@ -27,7 +27,10 @@ export default function ClothingForm({ initial, save, cancel }: {
   const [color, setColor] = useState(initial?.color ?? '#ffffff')
   const [analyzing, setAnalyzing] = useState(false)
   const [notice, setNotice] = useState('')
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => { heading.current?.focus() }, [])
   async function analyze() {
+    if (!selectedPhoto) return
     setError('')
     setNotice('')
     setAnalyzing(true)
@@ -57,7 +60,7 @@ export default function ClothingForm({ initial, save, cancel }: {
       await save({ id: initial?.id ?? newGarmentId(), name, category, color: String(data.get('color')), photo, backPhoto })
     } catch { setError('Could not save this garment. Try again.'); setBusy(false) }
   }
-  return <section className="add-clothing"><h2>{initial ? 'Edit clothing' : 'Add clothing'}</h2>
+  return <section className="add-clothing"><h2 ref={heading} tabIndex={-1}>{initial ? 'Edit garment' : 'Add garment'}</h2>
     <form onSubmit={submit}><fieldset disabled={busy || analyzing}>
       <h3>Front photo</h3>
       <PhotoCrop view="Front" onChange={value => { setPhoto(value); setRecognitionView('Front') }} onReady={setReady} />
@@ -69,17 +72,17 @@ export default function ClothingForm({ initial, save, cancel }: {
         {photo && backPhoto && <label>Photo for suggestions<select value={recognitionView}
           onChange={event => setRecognitionView(event.target.value === 'Back' ? 'Back' : 'Front')}>
           <option>Front</option><option>Back</option></select></label>}
-        <p>This sends the selected garment view to Gemini.</p>
+        <p>This sends the selected cropped photo to Gemini.</p>
         <button type="button" disabled={!selectedPhoto?.startsWith('data:image/jpeg;base64,')} onClick={analyze}>Suggest details from photo</button>
       </>}
       {analyzing && <p role="status">Checking photo…</p>}
       {notice && <p role="status">{notice}</p>}
-      <label>Clothing name<input autoFocus name="name" value={name} onChange={event => setName(event.target.value)} required maxLength={clothingNameLimit} /></label>
+      <label>Garment name<input name="name" value={name} onChange={event => setName(event.target.value)} required maxLength={clothingNameLimit} /></label>
       <label><span id="category-label">Category</span><select name="category" aria-labelledby="category-label" value={category} onChange={event => setCategory(event.target.value)} required>
         <option value="" disabled>Choose a category</option>{clothingCategories.map(value => <option key={value}>{value}</option>)}
       </select></label>
       <label>Color<input type="color" name="color" value={color} onChange={event => setColor(event.target.value)} /></label>
-      <div className="actions"><button className="action-button" disabled={!ready || !backReady}>Save clothing</button>
+      <div className="actions"><button className="action-button" disabled={!ready || !backReady}>Save garment</button>
       <button type="button" onClick={cancel}>Cancel</button></div>
     </fieldset></form>{error && <p role="alert">{error}</p>}
   </section>

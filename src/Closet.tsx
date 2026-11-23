@@ -41,10 +41,11 @@ export default function Closet() {
     </dl>}
     <div className="closet-toolbar"><div className="closet-filters" role="group" aria-label="Filter clothing by category">
       {filters.map(filter => <button key={filter} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}
-    </div><button className="action-button" onClick={() => setEditing('new')}>Add Clothing</button></div>
-    <p className="closet-count" role="status">{demo ? 'Demo wardrobe · ' : ''}{visible.length} {visible.length === 1 ? 'item' : 'items'}</p>
+    </div><button className="action-button" onClick={() => setEditing('new')}>{demo ? 'Add your first garment' : 'Add garment'}</button></div>
+    {demo ? <p className="closet-count">Demo wardrobe</p> :
+      category !== 'All' && <p className="closet-count" role="status">{visible.length} {visible.length === 1 ? 'item' : 'items'}</p>}
     <p role="status">{notice}</p>
-    {!visible.length && <p>No items in this category yet. Add clothing or choose another category.</p>}
+    {!visible.length && <p>No items in this category yet. Add a garment or choose another category.</p>}
     <ul className="closet-grid" aria-label="Clothing items" role="list">{visible.map(item => <li className="clothing-card" key={item.id}>
       <GarmentImage item={item} /><div><small>{item.category}</small><h2>{item.name}</h2>
       {!demo && <>
