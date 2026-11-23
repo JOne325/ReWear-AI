@@ -17,7 +17,9 @@ Closet stores clothing and cropped photos in IndexedDB for the current browser a
 
 ## Style Me setup
 
-Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. Restart Vite after changing it. `GEMINI_MODEL` is optional.
+Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. Restart Vite after changing it. `GEMINI_MODEL` defaults to `gemini-3.8-flash`. The photo and outfit overrides take precedence for their respective features.
+
+When Gemini returns HTTP 429, remains unavailable with HTTP 503, or times out, photo analysis and outfit suggestions try the next model in the server’s `GEMINI_FALLBACK_MODELS` list. The default order is `gemini-3.6-flash,gemini-3.5-flash-lite`. Set an empty list to disable switching. Choose models that accept image input and structured output if you use the same list for photos and outfits. The same project key is used throughout.
 
 Style Me sends clothing names, categories, colors and IDs to the server when you request an outfit. The server calls Gemini and checks that its suggested items belong to the submitted closet. Vite serves `POST /api/recommendations` in development and local preview. The production server serves this endpoint alongside the built app.
 
@@ -29,7 +31,7 @@ Developer A starts on `feature/frontend` with the Closet, Style Me and Saved nav
 
 ## Photo suggestions and occasions
 
-After applying a crop, choose **Suggest details from photo** to send that cropped JPEG to Gemini. Review or correct the suggested name, category and color before saving. Manual entry works when the provider is unavailable. Choose University or Interview in Style Me. Only garment metadata goes into the outfit request.
+AI smart crop fills a blank garment name when you confirm the crop. After any crop, you can also choose **Suggest name and details from photo** to send that cropped JPEG to Gemini. Review or correct the suggested name, category and color before saving. Manual entry works when the provider is unavailable. Choose University or Interview in Style Me. Only garment metadata goes into the outfit request.
 
 ## Run the production server
 
@@ -41,7 +43,7 @@ Use four tops, four bottoms and four pairs of shoes. Record expected category an
 
 ### Model settings and photo previews
 
-The default is `gemini-3.5-flash`. Set `GEMINI_PHOTO_MODEL` or `GEMINI_OUTFIT_MODEL` in the server environment to override an individual feature. `GEMINI_MODEL` is their shared fallback. Restart the server after changing model settings.
+Set `GEMINI_PHOTO_MODEL` or `GEMINI_OUTFIT_MODEL` in the server environment to override an individual feature. `GEMINI_MODEL` is their shared fallback. Restart the server after changing model settings.
 
 Fit whole garment keeps the full frame in a square tile. Edit a garment to replace either view or reclassify a jacket as Outerwear. Existing single photos appear as the front view, and Saved keeps the snapshots from the time of saving.
 
@@ -58,7 +60,7 @@ Students own clothes but keep buying more because they cannot see what they coul
 
 **AI features.** Gemini vision suggests a garment name, category, colour and crop box. For University or Interview, Gemini chooses from the eligible closet inventory, capped at 100 garments, and receives recent outfit IDs to discourage repeats. Demo mode generates outfits locally. The server validates returned outfit IDs against the submitted closet. Dark, patterned or low-contrast garments can be misread. Users can review and edit the results.
 
-Set `GEMINI_PHOTO_MODEL` and `GEMINI_OUTFIT_MODEL` for individual features, with `GEMINI_MODEL` as the shared fallback. The code defaults to `gemini-2.5-flash` for photo analysis and `gemini-3.5-flash` for outfit recommendations.
+Set `GEMINI_PHOTO_MODEL` and `GEMINI_OUTFIT_MODEL` for individual features, with `GEMINI_MODEL` as the shared fallback. Both features default to `gemini-3.8-flash`.
 
 **Privacy.** The closet, garment photos and saved looks live in the browser's IndexedDB. Outfit recommendations send garment IDs, names, categories and colours, the occasion, and recent outfit IDs. When users request photo details or AI smart crop, the app sends the prepared JPEG to Gemini. The API key stays on the server.
 

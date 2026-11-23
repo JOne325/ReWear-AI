@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
 import { friendlyError } from './errors'
+import { loadImageFromSrc, renderTo512Jpeg, rotatePhoto, type CropBox, type CropMode } from './photoFraming'
 
-type CropBox = { ymin: number; xmin: number; ymax: number; xmax: number }
-type CropMode = 'fit' | 'manual' | 'ai'
 
 const AI_VERTICAL_PADDING = 10
 const AI_HORIZONTAL_PADDING = 55
-const OUTPUT_SIZE = 512
 
 function parseCropBox(raw: unknown): CropBox | null {
   if (typeof raw !== 'object' || raw === null) return null
@@ -24,63 +22,11 @@ function parseCropBox(raw: unknown): CropBox | null {
   return { ymin, xmin, ymax, xmax }
 }
 
-function renderTo512Jpeg(
-  image: HTMLImageElement,
-  mode: CropMode,
-  area: Area | null,
-  box: CropBox | null,
-): string | null {
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = OUTPUT_SIZE
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-
-  ctx.fillStyle = '#fff'
-  ctx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
-
-  const scale = OUTPUT_SIZE / Math.max(image.naturalWidth, image.naturalHeight)
-  const width = image.naturalWidth * scale
-  const height = image.naturalHeight * scale
-  const left = (OUTPUT_SIZE - width) / 2
-  const top = (OUTPUT_SIZE - height) / 2
-  if (mode === 'manual' && area) {
-    ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
-  } else if (mode === 'ai' && box) {
-    // Gemini measures the padded square sent for detection. Intersect its box
-    // with the photo inside that square, then map back to the original pixels.
-    const toPixels = (value: number) => value * OUTPUT_SIZE / 1000
-    const x1 = Math.max(left, toPixels(box.xmin))
-    const y1 = Math.max(top, toPixels(box.ymin))
-    const croppedWidth = Math.min(left + width, toPixels(box.xmax)) - x1
-    const croppedHeight = Math.min(top + height, toPixels(box.ymax)) - y1
-    if (croppedWidth <= 0 || croppedHeight <= 0) return null
-
-    const fit = OUTPUT_SIZE / Math.max(croppedWidth, croppedHeight)
-    const targetWidth = croppedWidth * fit
-    const targetHeight = croppedHeight * fit
-    ctx.drawImage(image, (x1 - left) / scale, (y1 - top) / scale,
-      croppedWidth / scale, croppedHeight / scale,
-      (OUTPUT_SIZE - targetWidth) / 2, (OUTPUT_SIZE - targetHeight) / 2, targetWidth, targetHeight)
-  } else {
-    ctx.drawImage(image, left, top, width, height)
-  }
-
-  return canvas.toDataURL('image/jpeg', 0.84)
-}
-
-async function loadImageFromSrc(imageSrc: string): Promise<HTMLImageElement> {
-  const img = new Image()
-  img.src = imageSrc
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error('Failed to load image'))
-  })
-  return img
-}
-
-export default function PhotoCrop({ view, onChange, onReady }: {
+export default function PhotoCrop({ view, currentPhoto, onChange, onRemove, onReady }: {
   view: 'Front' | 'Back'
-  onChange: (photo: string) => void
+  currentPhoto?: string
+  onChange: (photo: string, suggestedName?: string) => void
+  onRemove: () => void
   onReady: (ready: boolean) => void
 }) {
   const media = useRef<RefObject<HTMLImageElement> | null>(null)
@@ -88,24 +34,67 @@ export default function PhotoCrop({ view, onChange, onReady }: {
   const [mode, setMode] = useState<CropMode>('fit')
   const [loaded, setLoaded] = useState(false)
   const [src, setSrc] = useState('')
+  const [orientation, setOrientation] = useState({ turns: 0, source: '' })
+  const source = orientation.source || src
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [area, setArea] = useState<Area | null>(null)
-  const [aiBox, setAiBox] = useState<CropBox | null>(null)
-  const [aiPreview, setAiPreview] = useState('')
-  const [detecting, setDetecting] = useState(false)
+  const [aiPreview, setAiPreview] = useState<{ photo: string; name?: string } | null>(null)
+  const [cutout, setCutout] = useState<{ photo: string; previousMode: Exclude<CropMode, 'cutout'> | null; name?: string } | null>(null)
+  const [pending, setPending] = useState<'crop' | 'cutout' | 'rotate' | null>(null)
+  const detecting = pending !== null
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (src) return () => URL.revokeObjectURL(src)
+    if (src.startsWith('blob:')) return () => URL.revokeObjectURL(src)
   }, [src])
+
+  function beginEditing(next: string) {
+    const existingCutout = next.startsWith('data:image/png')
+    setSrc(next)
+    setOrientation({ turns: 0, source: '' })
+    setMode(existingCutout ? 'cutout' : 'fit')
+    setCutout(existingCutout ? { photo: next, previousMode: null } : null)
+    setAiPreview(null)
+    setLoaded(false)
+    setArea(null)
+    setPosition({ x: 0, y: 0 })
+    setZoom(1)
+    setError('')
+    onReady(false)
+  }
+
+  async function rotate(direction: -1 | 1) {
+    if (!src || detecting) return
+    setPending('rotate')
+    setError('')
+    try {
+      const turns = (orientation.turns + direction + 4) % 4
+      const rotatedSource = turns ? await rotatePhoto(src, turns, 'image/png') : ''
+      const rotatedAi = aiPreview ? await rotatePhoto(aiPreview.photo, direction, 'image/jpeg') : undefined
+      const rotatedCutout = cutout ? await rotatePhoto(cutout.photo, direction, 'image/png') : undefined
+      setOrientation({ turns, source: rotatedSource })
+      if (aiPreview && rotatedAi) setAiPreview({ ...aiPreview, photo: rotatedAi })
+      if (cutout && rotatedCutout) setCutout({ ...cutout, photo: rotatedCutout })
+      if (mode === 'fit') setLoaded(false)
+      if (mode === 'manual' || cutout?.previousMode === 'manual') {
+        setArea(null)
+        setPosition({ x: 0, y: 0 })
+        setZoom(1)
+      }
+    } catch (cause) {
+      setError(friendlyError(cause, 'Could not rotate the photo.'))
+    } finally {
+      setPending(null)
+    }
+  }
 
   async function runAiCrop() {
     if (!src || detecting) return
-    setDetecting(true)
+    setPending('crop')
     setError('')
     try {
-      const image = fullImage.current?.naturalWidth ? fullImage.current : await loadImageFromSrc(src)
+      const image = await loadImageFromSrc(source)
       const fitPhoto = renderTo512Jpeg(image, 'fit', null, null)
       if (!fitPhoto) {
         setError('Could not prepare the photo for garment detection.')
@@ -134,69 +123,115 @@ export default function PhotoCrop({ view, onChange, onReady }: {
         setError('Could not crop to the detected garment.')
         return
       }
-      setAiBox(box)
-      setAiPreview(cropped)
+      const name = (data as { name?: unknown }).name
+      setAiPreview({ photo: cropped, name: typeof name === 'string' ? name : undefined })
       setMode('ai')
     } catch {
       const fallback = 'Network error while detecting garment. Try manual crop.'
       setError(navigator.onLine ? fallback : friendlyError(null, fallback))
     } finally {
-      setDetecting(false)
+      setPending(null)
+    }
+  }
+
+  async function runCutout() {
+    if (!src || detecting || mode === 'cutout' || (mode === 'manual' && !area)) return
+    setPending('cutout')
+    setError('')
+    try {
+      const photo = mode === 'ai' && aiPreview ? aiPreview.photo : renderTo512Jpeg(await loadImageFromSrc(source), mode, area, null)
+      if (!photo) throw new Error('Could not prepare the photo.')
+      const response = await fetch('/api/clothing-cutout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not remove the background.')
+      setCutout({ photo: result.photo, previousMode: mode, name: mode === 'ai' ? aiPreview?.name : undefined })
+      setMode('cutout')
+    } catch (cause) {
+      setError(friendlyError(cause, 'Could not remove the background. Try again or keep the original photo.'))
+    } finally {
+      setPending(null)
     }
   }
 
   function applyCrop() {
-    if (mode === 'ai' && aiPreview) {
-      onChange(aiPreview)
+    if (mode === 'cutout' && cutout) {
+      onChange(cutout.photo, cutout.name)
       setSrc('')
-      setAiBox(null)
-      setAiPreview('')
+      setCutout(null)
+      onReady(true)
+      return
+    }
+    if (mode === 'ai' && aiPreview) {
+      onChange(aiPreview.photo, aiPreview.name)
+      setSrc('')
+      setAiPreview(null)
       onReady(true)
       return
     }
     const image = mode === 'manual' ? media.current?.current : fullImage.current
     if (!image?.naturalWidth) return
-    const jpeg = renderTo512Jpeg(image, mode, area, aiBox)
+    const jpeg = renderTo512Jpeg(image, mode, area, null)
     if (!jpeg) {
       setError('Could not prepare the photo. Choose it again.')
       return
     }
     onChange(jpeg)
     setSrc('')
-    setAiBox(null)
-    setAiPreview('')
+    setAiPreview(null)
     onReady(true)
   }
 
   return <>
     <div className="photo-pickers">{(['Take photo', 'Choose from gallery'] as const).map(action =>
-      <label key={action}>{action}<input aria-label={view + ' · ' + action} type="file" accept="image/*" disabled={detecting} capture={action === 'Take photo' ? 'environment' : undefined} onChange={event => {
+      <label key={action}>{currentPhoto && !src
+        ? action === 'Take photo' ? 'Retake photo' : 'Choose replacement'
+        : action}<input aria-label={view + ' · ' + action} type="file" accept="image/*" disabled={detecting} capture={action === 'Take photo' ? 'environment' : undefined} onChange={event => {
       const next = event.target.files?.[0]
       if (!next) return
-      setSrc(URL.createObjectURL(next)); setArea(null); setAiBox(null); setAiPreview(''); setError('')
-      setMode('fit'); setLoaded(false)
-      setPosition({ x: 0, y: 0 }); setZoom(1); onReady(false)
+      beginEditing(URL.createObjectURL(next))
       event.target.value = ''
-    }} /></label>)}</div>
+    }} /></label>)}
+    {!src && currentPhoto && <div className="actions" role="group" aria-label={view + ' photo actions'}>
+      <button type="button" onClick={() => beginEditing(currentPhoto)}>Edit photo</button>
+      <button type="button" onClick={onRemove}>Remove photo</button>
+    </div>}</div>
     {src && <>
+      <div className="actions" role="group" aria-label={view + ' photo rotation'}>
+        <button type="button" onClick={() => void rotate(-1)} disabled={detecting}>Rotate left 90°</button>
+        <button type="button" onClick={() => void rotate(1)} disabled={detecting}>Rotate right 90°</button>
+      </div>
       <div className="actions">
-        <button type="button" aria-pressed={mode === 'fit'} onClick={() => { setLoaded(true); setMode('fit') }} disabled={mode === 'fit' || detecting}>Fit whole garment</button>
+        <button type="button" aria-pressed={mode === 'fit'} onClick={() => { setLoaded(false); setMode('fit') }} disabled={mode === 'fit' || detecting}>Fit whole garment</button>
         <button type="button" aria-pressed={mode === 'manual'} onClick={() => { setArea(null); setMode('manual') }} disabled={mode === 'manual' || detecting}>Manual crop</button>
         <button type="button" aria-pressed={mode === 'ai'} onClick={runAiCrop} disabled={!loaded || detecting}>
-          {detecting ? 'Detecting garment...' : 'AI smart crop'}
+          {pending === 'crop' ? 'Detecting garment…' : 'AI smart crop'}
         </button>
+        <button type="button" aria-pressed={mode === 'cutout'} onClick={runCutout} disabled={detecting || mode === 'cutout' || (mode === 'manual' ? !area : !loaded && !aiPreview)}>
+          Remove background
+        </button>
+        {mode === 'cutout' && cutout?.previousMode && <button type="button" disabled={detecting}
+          onClick={() => {
+            if (cutout.previousMode === 'fit') setLoaded(false)
+            setMode(cutout.previousMode ?? 'fit')
+          }}>Undo background removal</button>}
       </div>
-      {mode === 'manual' ? <><div className="crop-area"><Cropper image={src} aspect={1} crop={position} zoom={zoom}
+      {pending === 'cutout' && <p role="status">Removing background…</p>}
+      {mode === 'manual' ? <><div className="crop-area"><Cropper key={source} image={source} aspect={1} crop={position} zoom={zoom}
         setImageRef={ref => { media.current = ref }}
         onCropChange={setPosition} onZoomChange={setZoom} onCropComplete={(_, pixels) => setArea(pixels)}
         mediaProps={{ onError: () => setError('This image could not be opened. Try a JPEG or PNG.') }} /></div>
       <label>Zoom<input type="range" min="1" max="3" step=".05" value={zoom} onChange={event => setZoom(Number(event.target.value))} /></label></> :
+        mode === 'cutout' && cutout ?
+          <img className="crop-preview cutout-preview" src={cutout.photo} alt={view + ' transparent garment cutout'} /> :
         mode === 'ai' && aiPreview ?
-          <img className="crop-preview ai-preview" src={aiPreview} alt={view + ' AI cropped garment preview'} /> :
-          <img className="crop-preview fit-preview" ref={fullImage} src={src} alt={view + ' whole garment preview'}
+          <img className="crop-preview ai-preview" src={aiPreview.photo} alt={view + ' AI cropped garment preview'} /> :
+          <img className="crop-preview fit-preview" ref={fullImage} src={source} alt={view + ' whole garment preview'}
             onLoad={() => setLoaded(true)} onError={() => setError('This image could not be opened. Try a JPEG or PNG.')} />}
-      <div className="actions"><button type="button" disabled={detecting || (mode === 'manual' ? !area : !loaded && !aiPreview)} onClick={applyCrop}>Use {view.toLowerCase()} photo</button>
-      <button type="button" disabled={detecting} onClick={() => { setSrc(''); setAiBox(null); setAiPreview(''); setError(''); onReady(true) }}>Cancel crop</button></div>
+      <div className="actions"><button type="button" disabled={detecting || (mode === 'cutout' ? !cutout : mode === 'manual' ? !area : !loaded && !aiPreview)} onClick={applyCrop}>Use {view.toLowerCase()} photo</button>
+      <button type="button" disabled={detecting} onClick={() => { setSrc(''); setAiPreview(null); setCutout(null); setError(''); onReady(true) }}>Cancel crop</button></div>
     </>}
     {error && <p role="alert">{error}</p>}
   </>

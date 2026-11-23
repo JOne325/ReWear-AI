@@ -49,3 +49,48 @@ test('limits repeated calls across both AI endpoints and resets the window', () 
   assert.equal(admit('another', 1), true)
   assert.equal(admit('client', 60_001), true)
 })
+
+test('uses the next configured model when a garment photo hits provider quota', async () => {
+  const models: string[] = []
+  const result = await suggestDetails({ photo }, {
+    apiKey: 'test', model: 'models/gemini-3.8-flash', fallbackModels: ['gemini-3.8-flash', 'gemini-3.6-flash'],
+  }, async (url) => {
+    models.push(String(url).split('/').at(-1)!)
+    return models.length === 1 ? new Response(null, { status: 429 }) :
+      Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        name: 'Maroon cable-knit sweater', category: 'Tops', color: '#552233',
+      }) }] } }] })
+  })
+  assert.deepEqual(models, ['gemini-3.8-flash:generateContent', 'gemini-3.6-flash:generateContent'])
+  assert.equal('name' in result.body && result.body.name, 'Maroon cable-knit sweater')
+})
+
+test('switches models when the photo provider is still unavailable after one retry', async () => {
+  const models: string[] = []
+  const result = await suggestDetails({ photo }, {
+    apiKey: 'test', model: 'gemini-3.8-flash', fallbackModels: ['gemini-3.6-flash'],
+  }, async (url) => {
+    models.push(String(url).split('/').at(-1)!)
+    return models.length <= 2 ? new Response(null, { status: 503 }) :
+      Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        name: 'White T-shirt', category: 'Tops', color: '#ffffff',
+      }) }] } }] })
+  })
+  assert.deepEqual(models, ['gemini-3.8-flash:generateContent', 'gemini-3.8-flash:generateContent', 'gemini-3.6-flash:generateContent'])
+  assert.equal(result.status, 200)
+})
+
+test('switches models after a photo request times out', async () => {
+  const models: string[] = []
+  const result = await suggestDetails({ photo }, {
+    apiKey: 'test', model: 'gemini-3.8-flash', fallbackModels: ['gemini-3.6-flash'],
+  }, async (url) => {
+    models.push(String(url).split('/').at(-1)!)
+    if (models.length === 1) throw new DOMException('Timed out', 'TimeoutError')
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      name: 'White T-shirt', category: 'Tops', color: '#ffffff',
+    }) }] } }] })
+  })
+  assert.deepEqual(models, ['gemini-3.8-flash:generateContent', 'gemini-3.6-flash:generateContent'])
+  assert.equal(result.status, 200)
+})
