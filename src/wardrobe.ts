@@ -12,6 +12,8 @@ export type ClothingItem = {
   color: string
   photo?: string
   backPhoto?: string
+  wornCount?: number
+  lastWornAt?: number
 }
 
 export type OutfitRecommendation = {

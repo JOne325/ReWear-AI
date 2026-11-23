@@ -241,3 +241,31 @@ button:not(.action-button) { color: var(--ink); background: var(--card); }
 .add-clothing button[type='button'] { border: 1px solid var(--control-border); border-radius: .5rem; padding: .45rem .75rem; }
 .photo-pickers label { background: var(--card); }
 .photo-pickers input { inset: 0; margin: 0; }
+
+.closet-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+  margin-block: 0 1.25rem;
+}
+.closet-summary > div {
+  padding: clamp(.5rem, 2vw, var(--space-card));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--card);
+}
+.closet-summary dt { color: var(--muted); font-size: .875rem; }
+.closet-summary dd { margin: 0; }
+.closet-summary dd:first-of-type { color: var(--primary); font: 600 1.9rem var(--font-heading); }
+.closet-summary .score-caption { color: var(--muted); font-size: .8125rem; }
+.wear-progress {
+  display: block;
+  width: 100%;
+  height: .375rem;
+  margin-top: .4rem;
+  accent-color: var(--primary);
+}
+@media (max-width: 28rem) {
+  .closet-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .closet-summary > :last-child { grid-column: 1 / -1; }
+}
