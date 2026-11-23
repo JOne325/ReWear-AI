@@ -6,6 +6,7 @@ type CropMode = 'fit' | 'manual' | 'ai'
 
 const AI_VERTICAL_PADDING = 10
 const AI_HORIZONTAL_PADDING = 55
+const OUTPUT_SIZE = 512
 
 function parseCropBox(raw: unknown): CropBox | null {
   if (typeof raw !== 'object' || raw === null) return null
@@ -29,33 +30,38 @@ function renderTo512Jpeg(
   box: CropBox | null,
 ): string | null {
   const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = 512
+  canvas.width = canvas.height = OUTPUT_SIZE
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
 
   ctx.fillStyle = '#fff'
-  ctx.fillRect(0, 0, 512, 512)
+  ctx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
 
+  const scale = OUTPUT_SIZE / Math.max(image.naturalWidth, image.naturalHeight)
+  const width = image.naturalWidth * scale
+  const height = image.naturalHeight * scale
+  const left = (OUTPUT_SIZE - width) / 2
+  const top = (OUTPUT_SIZE - height) / 2
   if (mode === 'manual' && area) {
-    ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, 512, 512)
+    ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
   } else if (mode === 'ai' && box) {
-    let sx = Math.floor((box.xmin / 1000) * image.naturalWidth)
-    let sy = Math.floor((box.ymin / 1000) * image.naturalHeight)
-    const sw = Math.max(1, Math.floor(((box.xmax - box.xmin) / 1000) * image.naturalWidth))
-    const sh = Math.max(1, Math.floor(((box.ymax - box.ymin) / 1000) * image.naturalHeight))
+    // Gemini measures the padded square sent for detection. Intersect its box
+    // with the photo inside that square, then map back to the original pixels.
+    const toPixels = (value: number) => value * OUTPUT_SIZE / 1000
+    const x1 = Math.max(left, toPixels(box.xmin))
+    const y1 = Math.max(top, toPixels(box.ymin))
+    const croppedWidth = Math.min(left + width, toPixels(box.xmax)) - x1
+    const croppedHeight = Math.min(top + height, toPixels(box.ymax)) - y1
+    if (croppedWidth <= 0 || croppedHeight <= 0) return null
 
-    const side = Math.min(Math.max(sw, sh), image.naturalWidth, image.naturalHeight)
-    const cx = sx + sw / 2
-    const cy = sy + sh / 2
-    sx = Math.max(0, Math.min(image.naturalWidth - side, Math.round(cx - side / 2)))
-    sy = Math.max(0, Math.min(image.naturalHeight - side, Math.round(cy - side / 2)))
-
-    ctx.drawImage(image, sx, sy, side, side, 0, 0, 512, 512)
+    const fit = OUTPUT_SIZE / Math.max(croppedWidth, croppedHeight)
+    const targetWidth = croppedWidth * fit
+    const targetHeight = croppedHeight * fit
+    ctx.drawImage(image, (x1 - left) / scale, (y1 - top) / scale,
+      croppedWidth / scale, croppedHeight / scale,
+      (OUTPUT_SIZE - targetWidth) / 2, (OUTPUT_SIZE - targetHeight) / 2, targetWidth, targetHeight)
   } else {
-    const scale = 512 / Math.max(image.naturalWidth, image.naturalHeight)
-    const width = image.naturalWidth * scale
-    const height = image.naturalHeight * scale
-    ctx.drawImage(image, (512 - width) / 2, (512 - height) / 2, width, height)
+    ctx.drawImage(image, left, top, width, height)
   }
 
   return canvas.toDataURL('image/jpeg', 0.84)
@@ -162,7 +168,7 @@ export default function PhotoCrop({ view, onChange, onReady }: {
 
   return <>
     <div className="photo-pickers">{(['Take photo', 'Choose from gallery'] as const).map(action =>
-      <label key={action}>{action}<input aria-label={view + ' · ' + action} type="file" accept="image/*" capture={action === 'Take photo' ? 'environment' : undefined} onChange={event => {
+      <label key={action}>{action}<input aria-label={view + ' · ' + action} type="file" accept="image/*" disabled={detecting} capture={action === 'Take photo' ? 'environment' : undefined} onChange={event => {
       const next = event.target.files?.[0]
       if (!next) return
       setSrc(URL.createObjectURL(next)); setArea(null); setAiBox(null); setAiPreview(''); setError('')
