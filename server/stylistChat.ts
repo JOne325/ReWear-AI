@@ -1,4 +1,4 @@
-import { isRecord, type GeminiConfig } from './gemini.ts'
+import { generateWithModelFallback, getCandidateText, isRecord, type GeminiConfig } from './gemini.ts'
 import { clothingCategories, clothingNameLimit } from '../src/wardrobe.ts'
 
 type ChatMessage = {
@@ -79,26 +79,17 @@ export async function replyStylistChat(input: unknown, config: GeminiConfig, sen
     parts: [{ text: m.text }],
   }))
 
-  const model = config.model || 'gemini-2.5-flash'
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+  const payload = {
+    systemInstruction: { parts: [{ text: systemInstruction }] },
+    contents,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 500,
+    },
+  }
 
   try {
-    const response = await send(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': config.apiKey,
-      },
-      signal: AbortSignal.timeout(25_000),
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 350,
-        },
-      }),
-    })
+    const response = await generateWithModelFallback(config, config.model, payload, send)
 
     if (response.status === 429) {
       return { status: 429, body: { error: 'Too many requests right now. Wait a few seconds and try again.' } }
@@ -109,16 +100,8 @@ export async function replyStylistChat(input: unknown, config: GeminiConfig, sen
       return { status: 502, body: { error: 'Could not get a stylist reply right now.' } }
     }
 
-    const payload: unknown = await response.json()
-    const reply = isRecord(payload) &&
-      Array.isArray(payload.candidates) &&
-      isRecord(payload.candidates[0]) &&
-      isRecord(payload.candidates[0].content) &&
-      Array.isArray(payload.candidates[0].content.parts) &&
-      isRecord(payload.candidates[0].content.parts[0]) &&
-      typeof payload.candidates[0].content.parts[0].text === 'string'
-      ? payload.candidates[0].content.parts[0].text.trim()
-      : ''
+    const data: unknown = await response.json()
+    const reply = getCandidateText(data).trim()
 
     if (!reply) {
       return { status: 502, body: { error: 'The stylist returned an empty reply. Try again.' } }
