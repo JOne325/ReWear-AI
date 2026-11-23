@@ -16,6 +16,7 @@ for (const entry of await readdir(dist, { recursive: true, withFileTypes: true }
 const types: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.jpg': 'image/jpeg',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json',
 }
 const pages = new Set(['/', '/style', '/saved'])
 const config = geminiConfig(process.env)
