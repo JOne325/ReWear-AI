@@ -3,7 +3,6 @@ import Closet from './Closet'
 import Guide from './Guide'
 import StyleMe from './StyleMe'
 import Saved from './Saved'
-import StylistChat from './StylistChat'
 
 const primarySections = [
   { path: '/', title: 'Closet' },
@@ -33,7 +32,6 @@ export default function App() {
         {current === guide && <Guide />}
         {!current && <p>Choose a page from the navigation above.</p>}
       </main>
-      <StylistChat />
     </>
   )
 }
