@@ -3,6 +3,7 @@ import { useClothing } from './useClothing'
 import { mockClothing } from './mockClothing'
 import { getOutfit, putOutfit } from './clothingStorage'
 import { nextCombination } from './rotation'
+import { biggestGap } from './gap'
 import OutfitBoard from './OutfitBoard'
 import {
   baseCategories, clothingCategories, occasions, recommendationItemLimit,
@@ -12,6 +13,7 @@ import {
 const slots: Record<ClothingCategory, string> = {
   Tops: 'Top', Bottoms: 'Bottoms', Shoes: 'Shoes', Outerwear: 'Outerwear',
 }
+const gapLabels = { Tops: 'top', Bottoms: 'pair of bottoms', Shoes: 'pair of shoes' }
 
 function outfitHistory(key: string): string[] {
   try {
@@ -84,6 +86,7 @@ function OutfitEditor({ closet, demo, pin, remix }: {
   const pieces = clothingCategories.flatMap(category => closet.filter(item =>
     item.category === category && outfit?.itemIds.includes(item.id)))
   const onlyOne = baseCategories.every(category => eligible.filter(item => item.category === category).length === 1)
+  const gap = demo ? null : biggestGap(closet)
   const swappable = clothingCategories.flatMap(category => {
     if (pin?.category === category) return []
     const choices = eligible.filter(item => item.category === category)
@@ -203,6 +206,10 @@ function OutfitEditor({ closet, demo, pin, remix }: {
           {saved && <a className="text-action" href="/saved">View saved outfits</a>}
         </div>
       </div>
+    </section>}
+    {gap && <section className="closet-gap" aria-label="Closet gap">
+      <h2>Closet gap</h2>
+      <p>You can make {gap.current} outfits from what you own. One more {gapLabels[gap.category]} would unlock {gap.newOutfits} new ones. Try swapping, borrowing or thrifting before buying new.</p>
     </section>}
   </>
 }

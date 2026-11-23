@@ -221,6 +221,14 @@ button { font: inherit; cursor: pointer; }
 .swap-controls legend { font-weight: 650; }
 .swap-controls label { display: grid; gap: .2rem; margin: .4rem 0; }
 .swap-controls p { margin: .25rem 0; }
+.closet-gap {
+  border: 1px solid #bdc6b9;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fffefa;
+  margin-top: 1.25rem;
+  max-width: 28rem;
+}
 @media (min-width: 45rem) {
   .outfit-editor { display: grid; grid-template-columns: minmax(0, 28rem) minmax(0, 23rem); align-items: start; gap: 1.25rem; }
 }
