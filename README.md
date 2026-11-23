@@ -1,4 +1,4 @@
-# ReWear AI
+# ReWear
 
 A mobile-first wardrobe app for suggesting outfits from clothes you own.
 
