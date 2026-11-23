@@ -1,648 +1,429 @@
-:root {
-  --primary: #1e362e;
-  --border: #bdc6b9;
-  --card: #fffefa;
-  --muted: #4d6257;
-  --radius-card: 1rem;
-  --font-heading: Georgia, serif;
-  --space-card: 1rem;
+.app-header { border-bottom: 1px solid var(--line); }
+.app-header-inner, main {
+  width: min(100%, var(--page-width));
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
 }
 
-header, main {
-  max-width: 64rem;
-  margin: auto;
-  padding: 1.25rem;
-}
-
-header {
-  display: flex;
+.app-header-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
   gap: 1rem;
-  border-bottom: 1px solid var(--border);
+  min-height: 4.5rem;
 }
 
-strong {
-  font: bold 1.65rem var(--font-heading);
-}
-
-nav {
-  display: flex;
-  gap: .25rem;
-}
-
-a {
-  color: inherit;
-  padding: .8rem .55rem;
+.wordmark {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 44px;
+  color: var(--accent);
+  font: 600 2rem / 1 var(--font-heading);
+  letter-spacing: -.05em;
   text-decoration: none;
 }
+.wordmark img { display: block; }
 
-a[aria-current] {
-  text-decoration: underline;
-  text-underline-offset: .4rem;
-}
-
-h1 {
-  font: 3rem var(--font-heading);
-  margin: 2rem 0 1rem;
-}
-
-.closet-filters {
+.app-header nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-}
-
-.closet-filters button {
-  min-width: 44px;
-  min-height: 44px;
-  padding: .5rem .9rem;
-  border: 1px solid #76877c;
-  border-radius: 999px;
-  color: inherit;
-  background: transparent;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.closet-filters button[aria-pressed='true'] {
-  border-color: var(--primary);
-  color: #fff;
-  background: var(--primary);
-}
-
-.closet-filters button:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 3px;
-}
-
-.closet-count {
-  margin: 1.5rem 0 .75rem;
-  color: var(--muted);
-  font-size: .875rem;
-}
-
-.closet-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
-  gap: .75rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.clothing-card {
-  display: block;
-  overflow: hidden;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--card);
-}
-
-.clothing-card > div {
-  padding: .85rem 1rem 1rem;
-}
-
-.clothing-card h2 {
-  margin: .25rem 0 0;
-  font: 1.3rem var(--font-heading);
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.clothing-card p {
-  margin: .125rem 0 0;
-  color: var(--muted);
-  font-size: .875rem;
-}
-
-.add-clothing {
-  max-width: 30rem;
-  margin-top: 2rem;
-}
-
-.add-clothing fieldset {
-  display: grid;
-  gap: .75rem;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.add-clothing label {
-  display: grid;
+  align-items: center;
   gap: .25rem;
 }
 
-.add-clothing input,
-.add-clothing select,
-.action-button {
-  min-height: 44px;
-  padding: .5rem .75rem;
-  border: 1px solid #76877c;
-  border-radius: .5rem;
-  color: inherit;
-  background: var(--card);
-  font: inherit;
-}
-
-.add-clothing input[type='color'] {
-  width: 66px;
-}
-
-.action-button {
-  justify-self: start;
-  border-color: var(--primary);
-  color: #fff;
-  background: var(--primary);
-  cursor: pointer;
-}
-
-.action-button:disabled {
-  opacity: .65;
-  cursor: wait;
-}
-
-.add-clothing :focus-visible,
-.action-button:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 3px;
-}
-
-.form-confirmation:empty {
-  margin: 0;
-}
-
-.closet-toolbar,
-.actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: .65rem;
-}
-
-.closet-toolbar {
-  justify-content: space-between;
-}
-
-.garment-photo {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-}
-
-small {
-  display: block;
-  color: #496055;
-}
-
-.actions {
-  margin-top: .5rem;
-}
-
-button {
-  font: inherit;
-  cursor: pointer;
-}
-
-.actions button,
-.saved-outfit button {
-  min-height: 44px;
-  padding: .45rem .9rem;
-  border: 1px solid #76877c;
-  border-radius: .5rem;
-}
-
-.crop-area {
-  position: relative;
-  aspect-ratio: 1;
-  background: #222;
-}
-
-.crop-preview {
-  width: min(100%, 15rem);
-  border-radius: .75rem;
-}
-
-.cutout-preview {
-  background: repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 0 0 / 16px 16px;
-}
-
-.outfit-board {
-  max-width: 28rem;
+.app-header nav a {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-areas: "tops outerwear" "bottoms ." "shoes .";
-  gap: clamp(.35rem, 2vw, 1rem);
-  margin: 1rem 0;
-  background: #eeeae1;
-  border-radius: 1rem;
-  padding: clamp(.65rem, 3vw, 1.25rem);
-}
-
-.outfit-board:not(:has(.slot-outerwear)) {
-  grid-template-columns: minmax(0, 14rem);
-  grid-template-areas: "tops" "bottoms" "shoes";
-  justify-content: center;
-}
-
-.outfit-board .slot-tops { grid-area: tops; }
-.outfit-board .slot-bottoms { grid-area: bottoms; }
-.outfit-board .slot-shoes { grid-area: shoes; }
-.outfit-board .slot-outerwear { grid-area: outerwear; }
-
-.outfit-board figure {
-  margin: 0;
-}
-
-.outfit-board .garment-photo {
-  border-radius: .75rem;
-}
-
-.outfit-board img.garment-photo {
-  object-fit: contain;
-  background: #fff;
-}
-
-.outfit-board figcaption {
-  padding: .5rem 0;
-  overflow-wrap: anywhere;
-}
-
-.saved-outfit {
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-@media (max-width: 28rem) {
-  .closet-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.fit-preview {
-  aspect-ratio: 1;
-  object-fit: contain;
-  background: white;
-}
-
-.photo-pickers {
-  display: flex;
-  gap: .5rem;
-  flex-wrap: wrap;
-}
-
-.photo-pickers .actions {
-  margin: 0;
-}
-
-.photo-pickers label {
-  position: relative;
   place-items: center;
   min-height: 44px;
-  padding: .45rem .75rem;
-  border: 1px solid #76877c;
-  border-radius: .5rem;
-  cursor: pointer;
+  padding: .5rem .875rem;
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  font-size: .875rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.photo-pickers input {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
+.app-header nav a[aria-current], .app-header nav a:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
-.photo-pickers label:focus-within {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+.guide-link { justify-self: end; font-size: .875rem; white-space: nowrap; }
+.guide-link[aria-current] { font-weight: 750; }
+main { padding-block: clamp(2rem, 5vw, 4rem) 4rem; }
+
+.action-button, .actions button, .photo-pickers label, .add-clothing button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 44px;
+  padding: .5rem .875rem;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .875rem;
+  font-weight: 750;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 150ms, border-color 150ms, color 150ms;
+}
+.actions button:hover:not(:disabled), .photo-pickers label:hover, .add-clothing button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.action-button, .actions .action-button, .add-clothing .action-button {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.action-button:hover:not(:disabled), .actions .action-button:hover:not(:disabled),
+.add-clothing .action-button:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+button:disabled { opacity: .55; cursor: default; }
+button.action-button:disabled {
+  border-color: var(--disabled);
+  background: var(--disabled);
+  color: var(--muted);
+  opacity: 1;
+}
+.actions button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  opacity: 1;
 }
 
 .text-action {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: .35rem 0;
-  text-decoration: underline;
-  text-underline-offset: .2em;
-}
-
-.text-action.action-button {
-  padding: .5rem .75rem;
-  text-decoration: none;
-}
-
-.pinned-piece {
-  font: inherit;
   font-weight: 700;
 }
 
-.occasion-control select,
-.swap-controls select {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid #76877c;
-  border-radius: .5rem;
-  padding: .4rem .6rem;
-  color: inherit;
-  background: var(--card);
-  font: inherit;
-}
-
-.occasion-control select {
-  width: auto;
-}
-
-.swap-controls {
-  min-width: 0;
-  margin: 0;
-  padding: .7rem;
-  border: 1px solid var(--border);
-  border-radius: .75rem;
-}
-
-.swap-controls legend {
-  font-weight: 650;
-}
-
-.swap-controls label {
-  display: grid;
-  gap: .2rem;
-  margin: .4rem 0;
-}
-
-.swap-controls p {
-  margin: .25rem 0;
-}
-
-.closet-gap {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: 1rem;
-  background: var(--card);
-  margin-top: 1.25rem;
-  max-width: 28rem;
-}
-
-@media (min-width: 45rem) {
-  .outfit-editor {
-    display: grid;
-    grid-template-columns: minmax(0, 28rem) minmax(0, 23rem);
-    align-items: start;
-    gap: 1.25rem;
-  }
-}
-
-nav a,
-.guide-link,
-.photo-pickers .actions button {
-  min-inline-size: 44px;
-  min-block-size: 44px;
-}
-
-nav a {
-  display: inline-flex;
+.actions, .closet-filters, .photo-pickers {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  gap: .5rem;
 }
+.actions { margin-block-start: .75rem; }
 
-:where(a, button, input, select):focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 3px;
+:where(main) [role='alert'] {
+  padding: .75rem 1rem;
+  border-radius: var(--radius-control);
+  background: var(--error-soft);
+  color: var(--error);
+  overflow-wrap: anywhere;
 }
+:where(main) [role='status'] { color: var(--muted); }
+.form-confirmation { margin-block: .75rem; }
+.form-confirmation:empty { margin: 0; }
 
 .closet-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .5rem;
-  margin-block: 0 1.25rem;
+  grid-template-columns: 1fr 1fr 1.6fr;
+  margin: 0 0 1.75rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
 }
 
-.closet-summary > div {
-  padding: clamp(.5rem, 2vw, var(--space-card));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--card);
+.closet-summary > div { padding: clamp(.75rem, 2vw, 1.25rem); }
+.closet-summary > div + div { border-inline-start: 1px solid var(--line); }
+.closet-summary > :last-child { background: var(--accent-soft); }
+.closet-summary dt { color: var(--muted); font-size: .875rem; font-weight: 700; }
+.closet-summary dd { margin: 0; }
+.closet-summary dd:first-of-type {
+  margin-block-start: .25rem;
+  font: 500 2.5rem / 1 var(--font-heading);
+  font-variant-numeric: lining-nums tabular-nums;
 }
+.closet-summary > :last-child dd:first-of-type { color: var(--accent); }
+.closet-summary .score-caption { margin-block-start: .25rem; color: var(--muted); font-size: .8125rem; }
 
-.closet-summary dt {
+.closet-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1rem;
+  padding-block-end: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.closet-filters { gap: .25rem; }
+.closet-filters button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: .5rem .75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
   color: var(--muted);
   font-size: .875rem;
+  font-weight: 750;
+}
+.closet-filters button:hover { border-color: var(--line); color: var(--accent); }
+.closet-filters button[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent); }
+.add-garment-button { order: 1; }
+.add-garment-button span { font-size: 1.25rem; line-height: 1; }
+.closet-count { margin-block: .75rem 0; color: var(--muted); font-size: .875rem; }
+
+.closet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(.75rem, 2.5vw, 1.5rem);
+  margin-block: 1rem 0;
+  padding: 0;
+  list-style: none;
 }
 
-.closet-summary dd {
-  margin: 0;
+.clothing-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
 }
-
-.closet-summary dd:first-of-type {
-  color: var(--primary);
-  font: 600 1.9rem var(--font-heading);
-}
-
-.closet-summary .score-caption {
-  color: var(--muted);
-  font-size: .8125rem;
-}
-
-.wear-progress {
+.garment-photo {
   display: block;
   width: 100%;
-  height: .375rem;
-  margin-top: .4rem;
-  accent-color: var(--primary);
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: var(--photo-surface);
 }
+.clothing-card > div { padding: clamp(.75rem, 2vw, 1rem); }
+.clothing-card h2 { margin-block: .25rem; font-size: clamp(1.25rem, 3vw, 1.65rem); }
+.clothing-card p { color: var(--muted); font-size: .8125rem; }
+.wear-progress { display: block; width: 100%; height: .375rem; margin-block: .5rem; }
+.closet-toolbar ~ .empty-state { margin-block-start: 1rem; }
 
-@media (max-width: 28rem) {
-  .closet-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .closet-summary > :last-child {
-    grid-column: 1 / -1;
-  }
+.empty-state, .style-request, .closet-gap, .try-on-form, .add-clothing form {
+  padding: var(--panel-padding);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
 }
+.empty-state { max-width: 42rem; }
+.empty-state h2 + p { margin-block: .5rem 1rem; color: var(--muted); }
 
-header .guide-link {
-  font-size: .875rem;
-  color: var(--primary);
+.add-clothing { max-width: 45rem; }
+.add-clothing h2 { margin-block-end: 1rem; }
+.add-clothing fieldset {
+  display: grid;
+  gap: .75rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
-
-.guide {
-  max-width: 42rem;
-  line-height: 1.65;
-}
-
-.guide h2 {
-  margin: 1.5rem 0 .4rem;
-}
-
-.guide li + li {
-  margin-top: .5rem;
-}
-
-.guide strong {
-  font: inherit;
+.add-clothing h3:not(:first-child) { margin-top: .75rem; }
+.add-clothing label:not(.photo-pickers label), .try-on-picker {
+  display: grid;
+  gap: .25rem;
   font-weight: 700;
 }
 
-.stylist-widget {
-  position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: .65rem;
-}
-
-.stylist-launcher {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
+.add-clothing :is(input:not([type='file'], [type='range']), select),
+.style-request textarea, .try-on-description {
+  width: 100%;
+  min-width: 0;
   min-height: 44px;
-  padding: .65rem 1.15rem;
-  border: none;
-  border-radius: 999px;
-  background: var(--primary);
-  color: #fffefa;
-  font: 600 .95rem system-ui, sans-serif;
-  box-shadow: 0 8px 24px rgba(30, 54, 46, 0.28);
+  padding: .5rem .75rem;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.add-clothing input[type='color'] { max-width: 4.5rem; padding: .25rem; }
+.add-clothing :is(button, [type='range']) { justify-self: start; }
+.add-clothing [role='alert'] { margin-block-start: .75rem; }
+.photo-pickers .actions { margin: 0; }
+.photo-pickers label { position: relative; cursor: pointer; }
+.photo-pickers input, .try-on-upload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.photo-pickers label:has(:focus-visible), .try-on-upload:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.crop-area { position: relative; aspect-ratio: 1; background: #29252c; }
+.crop-preview { display: block; width: min(100%, 20rem); border-radius: var(--radius-control); }
+.fit-preview { aspect-ratio: 1; object-fit: contain; background: var(--surface); }
+.cutout-preview {
+  background: repeating-conic-gradient(#e4dcd5 0 25%, var(--surface) 0 50%) 0 0 / 16px 16px;
 }
 
-.stylist-launcher:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(30, 54, 46, 0.35);
+.style-layout { display: grid; gap: 1.25rem; align-items: start; }
+.style-request { max-width: 44rem; }
+.style-request-field { display: block; font-weight: 750; }
+.style-request textarea { display: block; min-height: 7rem; margin-block: .5rem; resize: vertical; }
+:is(.style-request textarea, .try-on-description)::placeholder { color: var(--muted); opacity: 1; }
+#style-request-help, #style-request-privacy, .try-on-privacy {
+  color: var(--muted);
+  font-size: .875rem;
 }
+#style-request-privacy, .try-on-privacy { margin-block: .75rem 1rem; }
+.style-request [role='status'] { margin-block-end: .75rem; }
+.closet-gap { background: var(--accent-soft); border-color: var(--accent-soft); }
+.closet-gap p, .style-result > p, .saved-outfit > p { margin-block-start: .5rem; }
+.outfit-request { overflow-wrap: anywhere; color: var(--muted); }
+.style-result h3 { margin-block: 1rem .5rem; }
 
-.stylist-launcher-icon {
-  font-size: 1.1rem;
-  line-height: 1;
+.outfit-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  max-width: 44rem;
+  gap: .5rem;
+  margin-block: .75rem;
+  padding: .75rem;
+  border-radius: var(--radius-panel);
+  background: var(--photo-surface);
 }
+.outfit-board figure { min-width: 0; margin: 0; }
+.outfit-board .garment-photo { border-radius: var(--radius-control); background: var(--surface); }
+.outfit-board figcaption { padding-block-start: .5rem; overflow-wrap: anywhere; font-size: .875rem; font-weight: 700; }
+.outfit-board small, .clothing-card small { display: block; }
+.missing-pieces ul { margin: 0; padding: 0; list-style: none; }
+.missing-pieces li { padding-block: .5rem; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.missing-pieces :is(small, strong) { display: block; }
+.saved-outfit { max-width: 44rem; padding-block: 1.5rem; border-bottom: 1px solid var(--line); }
+.saved-outfit:first-of-type { padding-block-start: 0; }
 
-.stylist-chat {
-  width: min(23rem, calc(100vw - 2.5rem));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--card);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+.try-on-panel {
+  display: grid;
+  max-width: 44rem;
+  gap: 1rem;
+  align-items: start;
+}
+.try-on-intro { color: var(--muted); }
+.try-on-inputs { min-width: 0; margin: 0; padding: 0; border: 0; }
+.try-on-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  margin-block-end: 1rem;
+}
+.try-on-upload {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  align-items: start;
+  justify-items: start;
+  gap: .25rem;
+  min-width: 0;
+  min-height: 9rem;
+  padding: clamp(.625rem, 2.5vw, 1.125rem);
+  border: 1px dashed var(--control-line);
+  border-radius: var(--radius-panel);
+  background: var(--paper);
+}
+.try-on-upload:hover { background: var(--accent-soft); }
+.try-on-upload-title { font-weight: 750; }
+.try-on-upload-hint { color: var(--muted); font-size: .8125rem; }
+.try-on-upload-action {
+  align-self: end;
+  grid-row: 4;
+  color: var(--accent);
+  font-size: .875rem;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+.try-on-inputs:disabled .try-on-upload { opacity: .65; }
+.try-on-inputs:disabled input { cursor: default; }
+.try-on-picker { font-size: .875rem; }
+.try-on-description { font-size: 1rem; }
+.try-on-form [role='alert'] { margin-block: .5rem; }
+.try-on-result { min-width: 0; margin: 0; }
+.try-on-images img, .try-on-result img {
+  display: block;
+  width: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-control);
+  background: var(--photo-surface);
+}
+.try-on-images img { height: clamp(6rem, 20vw, 10rem); }
+.try-on-result img { max-height: 30rem; }
+.try-on-result figcaption { margin-block-start: .5rem; color: var(--muted); font-size: .875rem; }
+
+.guide { max-width: 42rem; }
+.guide h2 { margin-block: 1.75rem .5rem; }
+.guide ol { margin-block: .75rem 0; padding-inline-start: 1.5rem; }
+.guide li + li { margin-block-start: .5rem; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.stylist-chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: .85rem 1rem;
-  background: var(--primary);
-  color: #fffefa;
+@media (min-width: 48rem) {
+  .style-layout:has(.closet-gap) { grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); }
+  .style-layout .closet-gap { grid-row: 1; grid-column: 2; }
+  .style-result, .style-feedback { grid-column: 1 / -1; }
+  .outfit-editor { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1.25rem; }
+  .try-on-panel:has(.try-on-result) {
+    max-width: none;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+  .try-on-panel:has(.try-on-result) > p { grid-column: 1 / -1; }
 }
 
-.stylist-chat-header h2 {
-  margin: 0;
-  font: 1.15rem var(--font-heading);
+@media (max-width: 40rem) {
+  .app-header-inner { grid-template-columns: 1fr auto; gap: 0 .75rem; padding-block-start: .5rem; }
+  .app-header nav { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding-block: .25rem .5rem; }
+  .app-header nav a { padding-inline: .25rem; }
+  .closet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .add-garment-button { order: 0; }
+  .closet-filters button { padding-inline: .5rem; }
 }
 
-.stylist-chat-header span {
-  font-size: .78rem;
-  opacity: 0.85;
+@media (max-width: 30rem) {
+  .closet-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .closet-summary > :last-child { grid-column: 1 / -1; border-inline-start: 0; border-block-start: 1px solid var(--line); }
+  .outfit-board { grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr)); }
 }
 
-.stylist-close {
-  background: transparent;
-  border: none;
-  color: #fffefa;
-  font-size: 1.1rem;
-  line-height: 1;
-  min-width: 36px;
-  min-height: 36px;
-  padding: .25rem;
-  cursor: pointer;
+@media (prefers-reduced-motion: reduce) {
+  .action-button, .actions button, .photo-pickers label, .add-clothing button { transition: none; }
 }
 
-.stylist-messages {
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-  height: 16rem;
-  overflow-y: auto;
-  padding: .85rem;
-  background: #f5f1e8;
+@media (prefers-reduced-motion: no-preference) {
+  .app-page > h1, .try-on-upload img, .try-on-result {
+    animation: rise-in 300ms ease-out both;
+  }
+
+  .closet-grid > :nth-child(-n + 6) { animation: rise-in 300ms ease-out both; }
+  .closet-grid > :nth-child(3n + 2) { animation-delay: 35ms; }
+  .closet-grid > :nth-child(3n + 3) { animation-delay: 70ms; }
+
+  .action-button:active:not(:disabled), .actions button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
 }
 
-.stylist-bubble {
-  max-width: 85%;
-  padding: .6rem .85rem;
-  border-radius: .95rem;
-  line-height: 1.4;
-  white-space: pre-line;
-  font-size: .88rem;
-}
-
-.stylist-bubble.assistant {
-  align-self: flex-start;
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: inherit;
-  border-bottom-left-radius: .25rem;
-}
-
-.stylist-bubble.user {
-  align-self: flex-end;
-  background: var(--primary);
-  color: #fff;
-  border-bottom-right-radius: .25rem;
-}
-
-.stylist-error {
-  margin: 0;
-  font-size: .82rem;
-  color: #9e2a2b;
-}
-
-.stylist-prompts {
-  display: flex;
-  gap: .4rem;
-  overflow-x: auto;
-  padding: .55rem .75rem;
-  background: var(--card);
-  border-top: 1px solid var(--border);
-}
-
-.stylist-prompts button {
-  flex: 0 0 auto;
-  padding: .3rem .65rem;
-  border: 1px solid var(--muted);
-  border-radius: 999px;
-  background: #f5f1e8;
-  color: var(--primary);
-  font-size: .78rem;
-  cursor: pointer;
-}
-
-.stylist-form {
-  display: flex;
-  gap: .45rem;
-  padding: .65rem .75rem;
-  background: var(--card);
-  border-top: 1px solid var(--border);
-}
-
-.stylist-form input {
-  flex: 1;
-  min-height: 40px;
-  padding: .4rem .75rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: #f9f7f2;
-  font: inherit;
-  font-size: .9rem;
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(.5rem); }
+  to { opacity: 1; transform: translateY(0); }
 }

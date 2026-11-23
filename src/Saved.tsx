@@ -41,9 +41,13 @@ export default function Saved() {
     {error && <p role="alert">{error}</p>}
     <p className="form-confirmation" role="status">{notice}</p>
     {!outfits && !error && <p role="status">Loading outfits…</p>}
-    {outfits?.length === 0 && <p>Save an outfit from <a className="text-action" href="/style">Style Me</a> to see it here.</p>}
+    {outfits?.length === 0 && <div className="empty-state">
+      <h2>No saved outfits yet</h2>
+      <p>Save a look from Style Me to revisit it and log when you wear it.</p>
+      <a className="action-button" href="/style">Go to Style Me</a>
+    </div>}
     {outfits?.map(outfit => <article className="saved-outfit" key={outfit.id}>
-      <h2>{outfit.occasion}</h2><OutfitBoard pieces={outfit.pieces} /><p>{outfit.reason}</p>
+      <h2>{outfit.title ?? outfit.occasion ?? 'Saved outfit'}</h2><OutfitBoard pieces={outfit.pieces} /><p>{outfit.reason}</p>
       <div className="actions">
         <button className="action-button" type="button" disabled={logging !== null}
           onClick={() => void logWear(outfit)}>{logging === outfit.id ? 'Logging wear…' : 'I wore this'}</button>

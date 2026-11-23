@@ -3,8 +3,7 @@ import { readdir } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { extname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { apiPaths, handleApi } from './api.ts'
-import { geminiConfig } from './gemini.ts'
+import { apiConfig, apiPaths, handleApi } from './api.ts'
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url))
 const assets = new Map<string, string>()
@@ -17,9 +16,10 @@ const types: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.jpg': 'image/jpeg',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon',
   '.webmanifest': 'application/manifest+json',
+  '.woff2': 'font/woff2',
 }
-const pages = new Set(['/', '/style', '/saved', '/guide'])
-const config = geminiConfig(process.env)
+const pages = new Set(['/', '/closet', '/style', '/saved', '/guide', '/try-on'])
+const config = apiConfig(process.env)
 createServer((req, res) => {
   const path = (req.url ?? '').split('?')[0]
   if (apiPaths.includes(path)) {
