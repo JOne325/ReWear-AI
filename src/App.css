@@ -205,7 +205,6 @@ button { font: inherit; cursor: pointer; }
   text-underline-offset: .2em;
 }
 .text-action.action-button { padding: .5rem .75rem; text-decoration: none; }
-.pinned-piece { font: inherit; font-weight: 700; }
 .occasion-control select {
   width: 100%;
   min-height: 44px;

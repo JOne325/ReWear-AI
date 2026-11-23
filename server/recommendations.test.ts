@@ -128,3 +128,26 @@ test('Gemini receives every submitted garment and recent outfits stay in the ins
     })
   assert.equal(result.status, 200)
 })
+
+test('retries a temporarily unavailable provider once with the same outfit request', async () => {
+  const requests: RequestInit[] = []
+  const result = await recommendOutfit({ items, avoid: [outfit.itemIds] }, config, async (_url, init) => {
+    assert.ok(init)
+    requests.push(init)
+    return requests.length === 1 ? new Response(null, { status: 503 }) : providerResponse(outfit)
+  })
+  assert.equal(requests.length, 2)
+  assert.equal(requests[0].body, requests[1].body)
+  assert.deepEqual(result, { status: 200, body: outfit })
+})
+
+test('reports provider downtime when the one retry also returns 503', async () => {
+  let attempts = 0
+  const result = await recommendOutfit({ items }, config, async () => {
+    attempts++
+    return new Response(null, { status: 503 })
+  })
+  assert.equal(attempts, 2)
+  assert.equal(result.status, 503)
+  assert.match('error' in result.body ? result.body.error ?? '' : '', /temporarily unavailable/i)
+})

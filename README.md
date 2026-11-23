@@ -59,5 +59,6 @@ Set `GEMINI_PHOTO_MODEL` and `GEMINI_OUTFIT_MODEL` for individual features, with
 
 **AI coding tools.** Claude and Codex were used for scaffolding, tests and refactors, with team review.
 
-- TODO(human): Add testing notes for bad input, no internet and AI failures, including issues found and fixed.
+- Production verification covered the four app pages and the manifest. Browser tests covered photo selection and cropping, both outfit occasions with simulated responses, saving and logging a wear, a 50% score, the six-outfit closet gap, and the offline and missing-key messages.
+- Live Gemini checks succeeded for a bundled garment photo and for University and Interview outfit requests after adding one retry for upstream HTTP 503. The physical phone camera and Add to Home Screen still need device checks.
 - TODO(human): Add team name and member names.

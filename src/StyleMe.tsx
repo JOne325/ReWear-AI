@@ -155,7 +155,7 @@ function OutfitEditor({ closet, demo }: { closet: ClothingItem[]; demo: boolean 
     </section>}
     {gap && <section className="closet-gap" aria-label="Closet gap">
       <h2>Closet gap</h2>
-      <p>You can make {gap.current} combinations of a top, bottoms and shoes. One more {gapLabels[gap.category]} would unlock {gap.newOutfits} new outfits. Try borrowing or swapping first.</p>
+      <p>You can make {gap.current} {gap.current === 1 ? 'combination' : 'combinations'} of a top, bottoms and shoes. One more {gapLabels[gap.category]} would unlock {gap.newOutfits} new {gap.newOutfits === 1 ? 'outfit' : 'outfits'}. Try borrowing or swapping first.</p>
     </section>}
   </>
 }
