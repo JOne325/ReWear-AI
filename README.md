@@ -49,3 +49,22 @@ Fit whole garment keeps the full frame in a square tile. Edit a garment to repla
 
 - Background removal: compare local segmentation on consenting sample front and back photos against the current full-frame preview. Check sleeves, trouser hems and similar foreground/background colors. Retain the original photo and offer the cutout as an optional preview.
 - One-jacket preview: evaluate a single jacket composite on a consenting or synthetic subject. Label it an approximate visualization and compare the rendered jacket shape and layering with the original photo.
+
+## AppFusion 2026 submission
+
+**Category** · Sustainability
+
+Students own clothes but keep buying more because they cannot see what they could already wear. ReWear suggests outfits from the clothes they own and shows how one more piece would multiply their options.
+
+**AI features.** Gemini vision suggests a garment name, category, colour and crop box. For University or Interview, Gemini chooses from the eligible closet inventory, capped at 100 garments, and receives recent outfit IDs to discourage repeats. Demo mode generates outfits locally. The server validates returned outfit IDs against the submitted closet. Dark, patterned or low-contrast garments can be misread. Users can review and edit the results.
+
+Set `GEMINI_PHOTO_MODEL` and `GEMINI_OUTFIT_MODEL` for individual features, with `GEMINI_MODEL` as the shared fallback. The code defaults to `gemini-2.5-flash` for photo analysis and `gemini-3.5-flash` for outfit recommendations.
+
+**Privacy.** The closet, garment photos and saved looks live in the browser's IndexedDB. Outfit recommendations send garment IDs, names, categories and colours, the occasion, and recent outfit IDs. When users request photo details or AI smart crop, the app sends the prepared JPEG to Gemini. The API key stays on the server.
+
+**Project history.** The repository has no commits before November 20, 2026. The November 21–22 history records the original Closet, Style Me and Saved flow, local storage, garment photos and outfit boards, photo-assisted entry, two occasions, front and back photos, outerwear, rotation, smart crop, and saved-look remixing. The November 23 AppFusion commits add Gemini outfit selection from the closet with recent-look context, Closet Gap, clearer offline and AI-failure messages, and the install manifest and icons.
+
+**AI coding tools.** Claude and Codex were used for scaffolding, tests and refactors, with team review.
+
+- TODO(human): Add testing notes for bad input, no internet and AI failures, including issues found and fixed.
+- TODO(human): Add team name and member names.
