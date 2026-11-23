@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { recommendOutfit } from './recommendations.ts'
+import { recommendationItemLimit, selectRecommendationItems, type ClothingItem } from '../src/wardrobe.ts'
 
 const items = [
   { id: 'tee', name: 'White T-shirt', category: 'Tops', color: '#ffffff' },
@@ -96,4 +97,34 @@ test('omits recent outfit instructions when avoid is absent', async () => {
   })
   assert.equal(result.status, 200)
   assert.doesNotMatch(instruction, /Recent outfits/)
+})
+
+test('an oversized closet fills the cap and keeps every available base category', () => {
+  const closet: ClothingItem[] = [
+    ...Array.from({ length: 120 }, (_, i): ClothingItem => ({
+      id: 'top-' + i, name: 'T-shirt', category: 'Tops', color: '#ffffff',
+    })),
+    { id: 'bottoms', name: 'Trousers', category: 'Bottoms', color: '#111111' },
+    { id: 'shoes', name: 'Shoes', category: 'Shoes', color: '#111111' },
+  ]
+  const selected = selectRecommendationItems(closet)
+  assert.equal(selected.length, recommendationItemLimit)
+  assert.ok(selected.some(item => item.id === 'bottoms'))
+  assert.ok(selected.some(item => item.id === 'shoes'))
+  assert.deepEqual(selectRecommendationItems(closet.slice(-4)), closet.slice(-4))
+})
+
+test('Gemini receives every submitted garment and recent outfits stay in the instruction', async () => {
+  const fullCloset = [...items,
+    { id: 'sweater', name: 'Sweater', category: 'Tops', color: '#334455' },
+    { id: 'boots', name: 'Boots', category: 'Shoes', color: '#222222' },
+  ]
+  const result = await recommendOutfit({ items: fullCloset, occasion: 'Interview', avoid: [outfit.itemIds] },
+    config, async (_url, init) => {
+      const prompt = JSON.parse(String(init?.body))
+      assert.deepEqual(JSON.parse(prompt.contents[0].parts[0].text), fullCloset)
+      assert.match(prompt.systemInstruction.parts[0].text, /Recent outfits to avoid repeating/)
+      return providerResponse({ itemIds: ['sweater', 'jeans', 'boots'], reason: 'Layers suit a cool day.' })
+    })
+  assert.equal(result.status, 200)
 })

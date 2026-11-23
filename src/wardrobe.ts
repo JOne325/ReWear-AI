@@ -30,3 +30,17 @@ export type SavedOutfit = OutfitRecommendation & {
   pieces: ClothingItem[]
   savedAt: number
 }
+
+export function selectRecommendationItems(items: ClothingItem[]): ClothingItem[] {
+  if (items.length <= recommendationItemLimit) return items
+  const selected = new Set<ClothingItem>()
+  for (const category of baseCategories) {
+    const first = items.find(item => item.category === category)
+    if (first) selected.add(first)
+  }
+  for (const item of items) {
+    if (selected.size === recommendationItemLimit) break
+    selected.add(item)
+  }
+  return items.filter(item => selected.has(item))
+}

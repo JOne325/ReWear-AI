@@ -118,11 +118,9 @@ export default function PhotoCrop({ view, onChange, onReady }: {
       })
       const data: unknown = await res.json().catch(() => null)
       if (!res.ok || typeof data !== 'object' || data === null) {
-        const msg = typeof (data as { error?: unknown })?.error === 'string'
-          ? (data as { error: string }).error
-          : 'Could not detect the garment automatically. Try manual crop.'
-        setError(msg)
-        return
+        throw new Error(res.status === 503
+          ? 'Gemini is unavailable. Choose manual crop or fit whole garment.'
+          : 'AI smart crop could not find the garment. Try manual crop or fit whole garment.')
       }
       const box = parseCropBox((data as { cropBox?: unknown }).cropBox)
       if (!box) {
@@ -137,9 +135,8 @@ export default function PhotoCrop({ view, onChange, onReady }: {
       setAiBox(box)
       setAiPreview(cropped)
       setMode('ai')
-    } catch {
-      const fallback = 'Network error while detecting garment. Try manual crop.'
-      setError(navigator.onLine ? fallback : friendlyError(null, fallback))
+    } catch (cause) {
+      setError(friendlyError(cause, 'Could not crop automatically. Try manual crop or fit whole garment.'))
     } finally {
       setDetecting(false)
     }

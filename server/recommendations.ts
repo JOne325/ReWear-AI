@@ -52,7 +52,7 @@ export async function recommendOutfit(input: unknown, config: GeminiConfig, send
   }
 
   if (!config.apiKey) {
-    return { status: 503, body: { error: 'Style Me is unavailable until Gemini is configured on the server.' } }
+    return { status: 503, body: { error: 'Gemini is unavailable. Your closet and saved outfits still work.' } }
   }
 
   const model = encodeURIComponent(config.outfitModel || config.model || 'gemini-3.5-flash')

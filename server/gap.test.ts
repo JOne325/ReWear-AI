@@ -25,3 +25,13 @@ test('ignores outerwear when counting base outfits', () => {
   assert.deepEqual(biggestGap(closet('Tops', 'Bottoms', 'Shoes', 'Outerwear')),
     biggestGap(closet('Tops', 'Bottoms', 'Shoes')))
 })
+
+test('one more pair of shoes unlocks six outfits with three tops and two bottoms', () => {
+  assert.deepEqual(biggestGap(closet('Tops', 'Tops', 'Tops', 'Bottoms', 'Bottoms', 'Shoes')),
+    { category: 'Shoes', newOutfits: 6, current: 6 })
+})
+
+test('an even closet prefers tops when all three categories tie', () => {
+  assert.deepEqual(biggestGap(closet('Tops', 'Bottoms', 'Shoes')),
+    { category: 'Tops', newOutfits: 1, current: 1 })
+})

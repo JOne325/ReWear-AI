@@ -7,7 +7,7 @@ import { biggestGap } from './gap'
 import { friendlyError } from './errors'
 import OutfitBoard from './OutfitBoard'
 import {
-  baseCategories, clothingCategories, occasions, recommendationItemLimit,
+  baseCategories, clothingCategories, occasions, selectRecommendationItems,
   type ClothingItem, type Occasion, type OutfitRecommendation,
 } from './wardrobe'
 
@@ -84,8 +84,7 @@ function OutfitEditor({ closet, demo }: { closet: ClothingItem[]; demo: boolean 
       } else {
         const key = 'rewear:recent:' + occasion
         const recent = recentOutfits(key)
-        const candidates = closet.length <= recommendationItemLimit ? closet : clothingCategories.flatMap(category =>
-          closet.filter(item => item.category === category).slice(0, category === 'Outerwear' ? 10 : 30))
+        const candidates = selectRecommendationItems(closet)
         const response = await fetch('/api/recommendations', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ occasion, avoid: recent, items: candidates.map(({ id, name, category, color }) => ({ id, name, category, color })) }),
