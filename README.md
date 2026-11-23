@@ -1,6 +1,8 @@
 # ReWear
 
-A mobile-first wardrobe app for suggesting outfits from clothes you own.
+ReWear helps students wear more of the clothes they already own so they buy less.
+
+[Read the user guide](docs/USER_GUIDE.md) or use **How to use** in the app.
 
 ## Local setup
 
@@ -11,21 +13,17 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite. Run `npm run build` and `npm run lint` before merging.
+Open the local URL printed by the development server. Run `npm run build` and `npm run lint` before merging.
 
-Closet stores clothing and cropped photos in IndexedDB for the current browser and origin. An empty closet shows a six-piece demo wardrobe with locally bundled AI-generated garment images. Style Me cycles through sample outfits in demo mode. Personal recommendations require one saved item in each category. Saved outfits keep the original garment IDs, images, and names as they appeared when saved.
+Closet stores clothing and cropped photos in IndexedDB for the current browser and origin. An empty closet shows a six-piece demo wardrobe with locally bundled AI-generated garment images. Style Me cycles through sample outfits in demo mode. Personal recommendations require one saved top, one garment in Bottoms and one pair of shoes. Saved outfits keep the original garment IDs, images, and names as they appeared when saved.
 
 ## Style Me setup
 
-Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. Restart Vite after changing it. `GEMINI_MODEL` is optional.
+Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. Restart the development server after changing it. `GEMINI_MODEL` is optional.
 
-Style Me sends clothing names, categories, colors and IDs to the server when you request an outfit. The server calls Gemini and checks that its suggested items belong to the submitted closet. Vite serves `POST /api/recommendations` in development and local preview. The production server serves this endpoint alongside the built app.
+Style Me sends clothing names, categories, colors and IDs to the server when you request an outfit. The server calls Gemini and checks that its suggested items belong to the submitted closet. The development and preview servers handle `POST /api/recommendations`. The production server serves this endpoint alongside the built app.
 
 Run `npm test` to check the recommendation contract with a simulated Gemini response.
-
-## First milestone
-
-Developer A starts on `feature/frontend` with the Closet, Style Me and Saved navigation and a mock wardrobe. Developer B works on `feature/ai-storage` on shared types, IndexedDB and the server-side recommendation endpoint. Developer A joins backend work after the frontend milestone. Keep Gemini credentials server-side.
 
 ## Photo suggestions and occasions
 
@@ -41,14 +39,9 @@ Use four tops, four bottoms and four pairs of shoes. Record expected category an
 
 ### Model settings and photo previews
 
-The default is `gemini-3.5-flash`. Set `GEMINI_PHOTO_MODEL` or `GEMINI_OUTFIT_MODEL` in the server environment to override an individual feature. `GEMINI_MODEL` is their shared fallback. Restart the server after changing model settings.
+Set `GEMINI_PHOTO_MODEL` or `GEMINI_OUTFIT_MODEL` in the server environment to override an individual feature. `GEMINI_MODEL` is their shared fallback. Restart the server after changing model settings.
 
 Fit whole garment keeps the full frame in a square tile. Edit a garment to replace either view or reclassify a jacket as Outerwear. Existing single photos appear as the front view, and Saved keeps the snapshots from the time of saving.
-
-### Follow-up experiments
-
-- Background removal: compare local segmentation on consenting sample front and back photos against the current full-frame preview. Check sleeves, trouser hems and similar foreground/background colors. Retain the original photo and offer the cutout as an optional preview.
-- One-jacket preview: evaluate a single jacket composite on a consenting or synthetic subject. Label it an approximate visualization and compare the rendered jacket shape and layering with the original photo.
 
 ## AppFusion 2026 submission
 
@@ -62,7 +55,7 @@ Set `GEMINI_PHOTO_MODEL` and `GEMINI_OUTFIT_MODEL` for individual features, with
 
 **Privacy.** The closet, garment photos and saved looks live in the browser's IndexedDB. Outfit recommendations send garment IDs, names, categories and colours, the occasion, and recent outfit IDs. When users request photo details or AI smart crop, the app sends the prepared JPEG to Gemini. The API key stays on the server.
 
-**Project history.** The repository has no commits before November 20, 2026. The November 21–22 history records the original Closet, Style Me and Saved flow, local storage, garment photos and outfit boards, photo-assisted entry, two occasions, front and back photos, outerwear, rotation, smart crop, and saved-look remixing. The November 23 AppFusion commits add Gemini outfit selection from the closet with recent-look context, Closet Gap, clearer offline and AI-failure messages, and the install manifest and icons.
+**Project history.** The repository has no commits before November 20, 2026. The November 21–22 history records the original Closet, Style Me and Saved flow, local storage, garment photos and outfit boards, photo-assisted entry, two occasions, front and back photos, outerwear, rotation, smart crop, and earlier saved-look tools. The November 23 AppFusion commits add Gemini outfit selection from the closet with recent-look context, Closet Gap, clearer offline and AI-failure messages, and the install manifest and icons.
 
 **AI coding tools.** Claude and Codex were used for scaffolding, tests and refactors, with team review.
 

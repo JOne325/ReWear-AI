@@ -18,7 +18,7 @@ const types: Record<string, string> = {
   '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon',
   '.webmanifest': 'application/manifest+json',
 }
-const pages = new Set(['/', '/style', '/saved'])
+const pages = new Set(['/', '/style', '/saved', '/guide'])
 const config = geminiConfig(process.env)
 createServer((req, res) => {
   const path = (req.url ?? '').split('?')[0]

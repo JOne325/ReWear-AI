@@ -269,3 +269,9 @@ button:not(.action-button) { color: var(--ink); background: var(--card); }
   .closet-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .closet-summary > :last-child { grid-column: 1 / -1; }
 }
+
+header .guide-link { font-size: .875rem; color: var(--primary); }
+.guide { max-width: 42rem; line-height: 1.65; }
+.guide h2 { margin: 1.5rem 0 .4rem; }
+.guide li + li { margin-top: .5rem; }
+.guide strong { font: inherit; font-weight: 700; }
