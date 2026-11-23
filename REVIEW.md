@@ -1,0 +1,12 @@
+# ReWear scope review
+
+Reviewed the committed AppFusion baseline in the original ReWear React/Vite repo. Port 4180 served the separate Loom & Linen reference. The original had 18 passing tests. This review used source inspection. Browser console and live network behavior were pending a ReWear smoke test.
+
+- **Closet** — Category filters, edit and remove already exist. The demo is labeled, but the first-run action says “Add Clothing”. “Style this piece” exposes a pinned flow. Wear history, saved outfit count and the 30-day ReWear Score are missing.
+- **Style Me** — University and Interview already submit closet inventory, up to 100 garments, with recent IDs for personal recommendations. Closet Gap and offline handling exist. The pinned flow can replace Gemini’s selection, swaps expose a separate workflow, and demo outfits can be saved. Gap numbers are computed, but the copy does not explain that they count base combinations. The incomplete-closet return hides the offline hint.
+- **Saved** — Outfit snapshots are present. “Remix outfit” adds a workflow outside the brief. There is no “I wore this” control, success status or storage-error handling for wear logging.
+- **Add garment** — Camera, gallery, three crop modes and editable AI details already exist. The form auto-focuses the name before the photo controls. Smart crop can display raw server errors. Crop and photo inputs need the same focus and hit area styling as the rest of the form.
+- **Names and navigation** — The app title, wordmark, manifest names and three primary tabs already use the requested labels. The case-insensitive search found “ReWear AI” in the README heading and four unreferenced template SVGs. Vite references and the rewear-ai package identifier are technical. No StyleSketch, Style Sketch, Studio or React App consumer labels were found. Both guides are missing.
+- **Accessibility and visual plan** — Some links and compact controls lack a 44px minimum in both dimensions, and only selected controls have explicit focus rules. Port violet accents, warm-neutral surfaces, Newsreader and Manrope with fallbacks, pill chips, card spacing and the three-metric summary layout. Use the reference for styling only.
+- **PWA and offline** — The manifest, two PNG icons, theme metadata and manifest MIME mapping exist. The open app can use IndexedDB offline. An offline reload can fail because there is no service worker.
+
