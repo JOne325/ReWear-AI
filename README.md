@@ -17,7 +17,7 @@ npm run dev
 
 Open the URL printed by Vite, then choose **Open your closet**. If you already have a clone, update `main` with `git pull --ff-only` before running `npm ci`.
 
-You can explore the demo wardrobe, add and edit garments manually, and use the photo editor without credentials. The first background removal downloads its model and can take longer. Closet and Saved data stay in IndexedDB for the current browser and origin. Use the same URL when returning to your closet.
+You can explore the demo wardrobe, add and edit garments manually, use the photo editor, and get basic outfit ideas from Style Me without credentials. The first background removal downloads its model and can take longer. Closet and Saved data stay in IndexedDB for the current browser and origin. Use the same URL when returning to your closet.
 
 To test on a phone on the same network, start Vite with `npm run dev -- --host` and open its **Network** URL on the phone. An HTTPS host is needed to test installation from another device.
 
@@ -25,7 +25,7 @@ To test on a phone on the same network, start Vite with `npm run dev -- --host` 
 
 Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. Restart the development server after changing it. `GEMINI_MODEL` defaults to `gemini-3.8-flash`. The photo and outfit overrides take precedence for their respective features.
 
-The key enables Style Me, AI smart crop and photo-assisted garment naming. Ask for any occasion or look, even with an empty closet. Style Me can suggest missing pieces and offer web search links. You can save a look when all of its pieces are in your closet. Keep `.env.local` on your machine.
+The key enables personalized Style Me suggestions, AI smart crop and photo-assisted garment naming. Ask for any occasion or look, even with an empty closet. Style Me can suggest missing pieces and offer web search links. You can save a look when all of its pieces are in your closet. Keep `.env.local` on your machine.
 
 When Gemini returns HTTP 429, remains unavailable with HTTP 503, or times out, photo analysis and outfit suggestions try the next model in the server’s `GEMINI_FALLBACK_MODELS` list. The default order is `gemini-3.6-flash,gemini-3.5-flash-lite`. Set an empty list to disable switching. Choose models that accept image input and structured output if you use the same list for photos and outfits. The same project key is used throughout.
 
