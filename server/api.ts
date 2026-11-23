@@ -3,8 +3,9 @@ import type { GeminiConfig } from './gemini.ts'
 import { recommendOutfit } from './recommendations.ts'
 import { suggestDetails } from './details.ts'
 import { removePhotoBackground } from './cutout.ts'
+import { replyStylistChat } from './stylistChat.ts'
 
-export const apiPaths = ['/api/clothing-details', '/api/recommendations', '/api/clothing-cutout']
+export const apiPaths = ['/api/clothing-details', '/api/recommendations', '/api/clothing-cutout', '/api/stylist-chat']
 const counts = new Map<string, number>()
 let resetAt = 0
 let total = 0
@@ -30,6 +31,7 @@ export async function handleApi(request: IncomingMessage, response: ServerRespon
   const path = request.url?.split('?')[0]
   const cutout = path === '/api/clothing-cutout'
   const photo = path === '/api/clothing-details'
+  const chat = path === '/api/stylist-chat'
   const maxBodyBytes = photo || cutout ? 512 * 1024 : 64 * 1024
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST')
@@ -68,6 +70,6 @@ export async function handleApi(request: IncomingMessage, response: ServerRespon
 
   const { status, body } = cutout
     ? await removePhotoBackground(input)
-    : await (photo ? suggestDetails : recommendOutfit)(input, config)
+    : await (chat ? replyStylistChat : photo ? suggestDetails : recommendOutfit)(input, config)
   respond(response, status, body)
 }
