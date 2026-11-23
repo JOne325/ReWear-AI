@@ -4,6 +4,7 @@ import { mockClothing } from './mockClothing'
 import { getOutfit, putOutfit } from './clothingStorage'
 import { nextCombination } from './rotation'
 import { biggestGap } from './gap'
+import { friendlyError } from './errors'
 import OutfitBoard from './OutfitBoard'
 import {
   baseCategories, clothingCategories, occasions, recommendationItemLimit,
@@ -79,8 +80,18 @@ function OutfitEditor({ closet, demo, pin, remix }: {
   const [pending, setPending] = useState<'suggest' | 'save' | null>(null)
   const [saved, setSaved] = useState(Boolean(remix))
   const [error, setError] = useState('')
+  const [offline, setOffline] = useState(() => !navigator.onLine)
   const [outfit, setOutfit] = useState<OutfitRecommendation | null>(
     remix ? { itemIds: remix.pieces.map(piece => piece.id), reason: remix.reason } : null)
+  useEffect(() => {
+    const update = () => setOffline(!navigator.onLine)
+    window.addEventListener('online', update)
+    window.addEventListener('offline', update)
+    return () => {
+      window.removeEventListener('online', update)
+      window.removeEventListener('offline', update)
+    }
+  }, [])
   const eligible = pin ? closet.filter(item => item.category !== pin.category || item.id === pin.id) : closet
   const missing = baseCategories.filter(category => !eligible.some(item => item.category === category))
   const pieces = clothingCategories.flatMap(category => closet.filter(item =>
@@ -136,7 +147,7 @@ function OutfitEditor({ closet, demo, pin, remix }: {
       setOutfit(result)
       setSaved(false)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Try again.')
+      setError(friendlyError(cause, 'Could not get an outfit. Try again.'))
     } finally {
       setPending(null)
     }
@@ -179,6 +190,7 @@ function OutfitEditor({ closet, demo, pin, remix }: {
     }}>{occasions.map(value => <option key={value}>{value}</option>)}</select></label>
     <p>{demo ? 'Using the demo wardrobe.' : 'Style Me shares garment names, categories and colors with Gemini.'}</p>
     {onlyOne && <p>{pin ? 'Only one base outfit matches this pinned piece.' : 'Your closet has one base outfit.'} Add more pieces for more combinations.</p>}
+    {offline && <p role="status">You are offline. Saved items are available, but suggestions need internet.</p>}
     <button className="action-button" disabled={pending !== null} onClick={suggest}>{outfit ? 'Try Again' : 'Suggest an outfit'}</button>
     {error && <p role="alert">{error}</p>}
     {pending === 'suggest' && <p role="status">Finding an outfit…</p>}

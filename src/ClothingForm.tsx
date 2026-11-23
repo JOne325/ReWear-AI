@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import PhotoCrop from './PhotoCrop'
+import { friendlyError } from './errors'
 import { clothingCategories, clothingNameLimit, type ClothingItem } from './wardrobe'
 
 function newGarmentId() {
@@ -41,7 +42,7 @@ export default function ClothingForm({ initial, save, cancel }: {
       if (result.color) setColor(result.color)
       setNotice(result.notice ?? 'Review the suggested details before saving.')
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Enter the garment details manually.')
+      setError(friendlyError(cause, 'Enter the garment details manually.'))
     } finally { setAnalyzing(false) }
   }
 

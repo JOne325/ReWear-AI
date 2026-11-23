@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
+import { friendlyError } from './errors'
 
 type CropBox = { ymin: number; xmin: number; ymax: number; xmax: number }
 type CropMode = 'fit' | 'manual' | 'ai'
@@ -137,7 +138,8 @@ export default function PhotoCrop({ view, onChange, onReady }: {
       setAiPreview(cropped)
       setMode('ai')
     } catch {
-      setError('Network error while detecting garment. Try manual crop.')
+      const fallback = 'Network error while detecting garment. Try manual crop.'
+      setError(navigator.onLine ? fallback : friendlyError(null, fallback))
     } finally {
       setDetecting(false)
     }
