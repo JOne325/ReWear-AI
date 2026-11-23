@@ -1,6 +1,22 @@
 import { clothingCategories, clothingNameLimit } from '../src/wardrobe.ts'
 import { getCandidateText, isRecord, type GeminiConfig } from './gemini.ts'
 
+export type CropBox = {
+  ymin: number
+  xmin: number
+  ymax: number
+  xmax: number
+}
+
+function parseCropBox(raw: unknown): CropBox | undefined {
+  if (!Array.isArray(raw) || raw.length !== 4) return undefined
+  const nums = raw.map((n) => (typeof n === 'number' && Number.isFinite(n) ? n : NaN))
+  if (nums.some(Number.isNaN)) return undefined
+  const [ymin, xmin, ymax, xmax] = nums.map((n) => Math.max(0, Math.min(1000, Math.round(n))))
+  if (ymax <= ymin || xmax <= xmin) return undefined
+  return { ymin, xmin, ymax, xmax }
+}
+
 export async function suggestDetails(input: unknown, config: GeminiConfig, send = fetch) {
   const prefix = 'data:image/jpeg;base64,'
   if (!isRecord(input) || typeof input.photo !== 'string' || !input.photo.startsWith(prefix)) {
@@ -10,24 +26,66 @@ export async function suggestDetails(input: unknown, config: GeminiConfig, send 
   if (data.length > 500_000 || !data.startsWith('/9j/') || !/^[A-Za-z0-9+/]+={0,2}$/.test(data)) {
     return { status: 400, body: { error: 'The cropped image is invalid or too large.' } }
   }
-  const invalid = { status: 502, body: { code: 'invalid_response', error: 'Gemini returned unreadable details. Try another garment view or enter details manually.' } }
-  if (!config.apiKey) return { status: 503, body: { error: 'Photo suggestions are unavailable. Enter the details manually.' } }
-  const model = encodeURIComponent(config.photoModel || config.model || 'gemini-3.5-flash')
+  const view = input.view === 'back' ? 'back' : input.view === 'front' ? 'front' : undefined
+
+  const invalid = {
+    status: 502,
+    body: {
+      code: 'invalid_response',
+      error: 'Gemini returned unreadable details. Try another garment view or enter details manually.',
+    },
+  }
+  if (!config.apiKey) {
+    return { status: 503, body: { error: 'Photo suggestions are unavailable. Enter the details manually.' } }
+  }
+
+  const model = encodeURIComponent(config.photoModel || config.model || 'gemini-2.5-flash')
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+
+  const viewHint = view
+    ? `This photo is intended to show the ${view} view of the garment.`
+    : 'Determine whether this shows the front or back of the garment when clear.'
+
+  const prompt = [
+    'Identify the main clothing garment in the photo.',
+    viewHint,
+    'Suggest a short descriptive name including visible pattern or material when clear, category, dominant color as #RRGGBB, detected view ("front", "back", or "unknown"), and a tight bounding box [ymin, xmin, ymax, xmax] on a 0-1000 scale framing the garment.',
+    'Classify jackets and coats as Outerwear. Choose Unknown if uncertain about the category, and still give the name and color when recognizable.',
+  ].join(' ')
+
   const body = JSON.stringify({
-        contents: [{ parts: [
-          { text: 'Identify the main garment. Suggest a short descriptive name including visible pattern or material when clear, category, and dominant color as #RRGGBB. Classify jackets and coats as Outerwear. Choose Unknown if uncertain about the category, and still give the name and color when recognizable.' },
-          { inlineData: { mimeType: 'image/jpeg', data } },
-        ] }],
-        generationConfig: { responseMimeType: 'application/json', responseJsonSchema: {
-          type: 'object', required: ['name', 'category', 'color'], properties: {
-            name: { type: 'string' }, category: { type: 'string', enum: [...clothingCategories, 'Unknown'] }, color: { type: 'string' },
+    contents: [{
+      parts: [
+        { text: prompt },
+        { inlineData: { mimeType: 'image/jpeg', data } },
+      ],
+    }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseJsonSchema: {
+        type: 'object',
+        required: ['name', 'category', 'color', 'box_2d'],
+        properties: {
+          name: { type: 'string' },
+          category: { type: 'string', enum: [...clothingCategories, 'Unknown'] },
+          color: { type: 'string' },
+          detectedView: { type: 'string', enum: ['front', 'back', 'unknown'] },
+          box_2d: {
+            type: 'array',
+            items: { type: 'number' },
           },
-        } },
+        },
+      },
+    },
   })
-  const request = () => send(url, { method: 'POST', body,
+
+  const request = () => send(url, {
+    method: 'POST',
+    body,
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.apiKey! },
-    signal: AbortSignal.timeout(25_000) })
+    signal: AbortSignal.timeout(25_000),
+  })
+
   let response: Response
   try {
     response = await request()
@@ -41,18 +99,40 @@ export async function suggestDetails(input: unknown, config: GeminiConfig, send 
     }
     return { status: 502, body: { code: 'network', error: 'Could not reach Gemini. Try again or enter details manually.' } }
   }
-  if (response.status === 429) return { status: 429, body: { code: 'rate_limit', error: 'Gemini has reached its rate or quota limit. Wait before retrying, or enter details manually.' } }
-  if (!response.ok) return { status: 502, body: { code: 'provider_error', error: `Gemini could not analyze the photo (HTTP ${response.status}). Try again or enter details manually.` } }
+
+  if (response.status === 429) {
+    return { status: 429, body: { code: 'rate_limit', error: 'Gemini has reached its rate or quota limit. Wait before retrying, or enter details manually.' } }
+  }
+  if (!response.ok) {
+    return { status: 502, body: { code: 'provider_error', error: `Gemini could not analyze the photo (HTTP ${response.status}). Try again or enter details manually.` } }
+  }
 
   try {
     const value: unknown = JSON.parse(getCandidateText(await response.json()))
     if (!isRecord(value)) return invalid
     const name = typeof value.name === 'string' && value.name.trim().length <= clothingNameLimit ? value.name.trim() : ''
-    const category = clothingCategories.find(category => category === value.category)
+    const category = clothingCategories.find((c) => c === value.category)
     const color = typeof value.color === 'string' && /^#[0-9a-f]{6}$/i.test(value.color) ? value.color : undefined
+    const cropBox = parseCropBox(value.box_2d)
+    const detectedView = value.detectedView === 'front' || value.detectedView === 'back' ? value.detectedView : view
+
     if (!name && !category && !color && value.category !== 'Unknown') return invalid
+
     const missing = [!name && 'name', !category && 'category', !color && 'color'].filter(Boolean)
-    return { status: 200, body: { name: name || undefined, category, color,
-      ...(missing.length ? { notice: `Gemini was unsure about: ${missing.join(', ')}. Review and complete those fields manually.` } : {}) } }
-  } catch { return invalid }
+    return {
+      status: 200,
+      body: {
+        name: name || undefined,
+        category,
+        color,
+        detectedView,
+        cropBox,
+        ...(missing.length
+          ? { notice: `Gemini was unsure about: ${missing.join(', ')}. Review and complete those fields manually.` }
+          : {}),
+      },
+    }
+  } catch {
+    return invalid
+  }
 }
