@@ -27,7 +27,6 @@ export default function Closet() {
     {!visible.length && <p>No items in this category yet. Add clothing or choose another category.</p>}
     <ul className="closet-grid" aria-label="Clothing items" role="list">{visible.map(item => <li className="clothing-card" key={item.id}>
       <GarmentImage item={item} /><div><small>{item.category}</small><h2>{item.name}</h2>
-      <a className="text-action" href={'/style?' + new URLSearchParams({ piece: item.id })}>Style this piece</a>
       {!demo && <div className="actions"><button onClick={() => setEditing(item)}>Edit</button>
         <button onClick={async () => {
           if (!window.confirm('Remove ' + item.name + ' from your closet?')) return

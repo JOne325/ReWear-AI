@@ -1,10 +1,10 @@
 header, main { max-width: 64rem; margin: auto; padding: 1.25rem; }
-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #bdc6b9; }
-strong { font: bold 1.65rem Georgia, serif; }
+header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border); }
+strong { font: bold 1.65rem var(--font-heading); }
 nav { display: flex; gap: .25rem; }
 a { color: inherit; padding: .8rem .55rem; text-decoration: none; }
 a[aria-current] { text-decoration: underline; text-underline-offset: .4rem; }
-h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
+h1 { font: 3rem var(--font-heading); margin: 2rem 0 1rem; }
 
 .closet-filters {
   display: flex;
@@ -16,7 +16,7 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
   min-width: 44px;
   min-height: 44px;
   padding: .5rem .9rem;
-  border: 1px solid #76877c;
+  border: 1px solid var(--control-border);
   border-radius: 999px;
   color: inherit;
   background: transparent;
@@ -26,19 +26,19 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
 }
 
 .closet-filters button[aria-pressed='true'] {
-  border-color: #1e362e;
+  border-color: var(--primary);
   color: #fff;
-  background: #1e362e;
+  background: var(--primary);
 }
 
 .closet-filters button:focus-visible {
-  outline: 2px solid #1e362e;
+  outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
 
 .closet-count {
   margin: 1.5rem 0 .75rem;
-  color: #4d6257;
+  color: var(--muted);
   font-size: .875rem;
 }
 
@@ -55,10 +55,10 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
-  border: 1px solid #bdc6b9;
-  border-radius: 1rem;
-  background: #fffefa;
+  padding: var(--space-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--card);
 }
 
 .clothing-card h2 {
@@ -70,7 +70,7 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
 
 .clothing-card p {
   margin: .125rem 0 0;
-  color: #4d6257;
+  color: var(--muted);
   font-size: .875rem;
 }
 
@@ -95,10 +95,10 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
 .add-clothing input, .add-clothing select, .action-button {
   min-height: 44px;
   padding: .5rem .75rem;
-  border: 1px solid #76877c;
+  border: 1px solid var(--control-border);
   border-radius: .5rem;
   color: inherit;
-  background: #fffefa;
+  background: var(--card);
   font: inherit;
 }
 
@@ -108,9 +108,9 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
 
 .action-button {
   justify-self: start;
-  border-color: #1e362e;
+  border-color: var(--primary);
   color: #fff;
-  background: #1e362e;
+  background: var(--primary);
   cursor: pointer;
 }
 
@@ -120,7 +120,7 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
 }
 
 .add-clothing :focus-visible, .action-button:focus-visible {
-  outline: 2px solid #1e362e;
+  outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
 
@@ -134,19 +134,19 @@ h1 { font: 3rem Georgia, serif; margin: 2rem 0 1rem; }
   flex-wrap: wrap;
   gap: .65rem;
 }
-.closet-toolbar { justify-content: space-between; }
+.closet-toolbar { justify-content: space-between; gap: 1rem; }
 .closet-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
 .clothing-card { display: block; overflow: hidden; padding: 0; }
 .clothing-card > div { padding: .85rem 1rem 1rem; }
-.clothing-card h2 { margin-top: .25rem; font: 1.3rem Georgia, serif; }
+.clothing-card h2 { margin-top: .25rem; font: 1.3rem var(--font-heading); }
 .garment-photo { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
-small { display: block; color: #496055; }
+small { display: block; color: var(--muted); }
 .actions { margin-top: .5rem; }
 button { font: inherit; cursor: pointer; }
 .actions button, .saved-outfit button {
   min-height: 44px;
   padding: .45rem .9rem;
-  border: 1px solid #76877c;
+  border: 1px solid var(--control-border);
   border-radius: .5rem;
 }
 .crop-area { position: relative; aspect-ratio: 1; background: #222; }
@@ -161,15 +161,15 @@ button { font: inherit; cursor: pointer; }
 .outfit-board figure { margin: 0; }
 .outfit-board .garment-photo { border-radius: .75rem; }
 .outfit-board figcaption { padding: .5rem 0; overflow-wrap: anywhere; }
-.saved-outfit { padding: 1rem 0; border-bottom: 1px solid #bdc6b9; }
+.saved-outfit { padding: 1rem 0; border-bottom: 1px solid var(--border); }
 @media (max-width: 28rem) { .closet-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 
 .outfit-board {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas: "tops outerwear" "bottoms ." "shoes .";
   max-width: 28rem;
-  background: #eeeae1;
-  border-radius: 1rem;
+  background: var(--linen);
+  border-radius: var(--radius-card);
   padding: clamp(.65rem, 3vw, 1.25rem);
 }
 .outfit-board:not(:has(.slot-outerwear)) {
@@ -189,12 +189,12 @@ button { font: inherit; cursor: pointer; }
   place-items: center;
   min-height: 44px;
   padding: .45rem .75rem;
-  border: 1px solid #76877c;
+  border: 1px solid var(--control-border);
   border-radius: .5rem;
   cursor: pointer;
 }
 .photo-pickers input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.photo-pickers label:focus-within { outline: 2px solid #1e362e; outline-offset: 2px; }
+.photo-pickers label:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .text-action {
   display: inline-flex;
@@ -206,29 +206,38 @@ button { font: inherit; cursor: pointer; }
 }
 .text-action.action-button { padding: .5rem .75rem; text-decoration: none; }
 .pinned-piece { font: inherit; font-weight: 700; }
-.occasion-control select, .swap-controls select {
+.occasion-control select {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #76877c;
+  border: 1px solid var(--control-border);
   border-radius: .5rem;
   padding: .4rem .6rem;
   color: inherit;
-  background: #fffefa;
+  background: var(--card);
   font: inherit;
 }
 .occasion-control select { width: auto; }
-.swap-controls { min-width: 0; margin: 0; padding: .7rem; border: 1px solid #bdc6b9; border-radius: .75rem; }
-.swap-controls legend { font-weight: 650; }
-.swap-controls label { display: grid; gap: .2rem; margin: .4rem 0; }
-.swap-controls p { margin: .25rem 0; }
 .closet-gap {
-  border: 1px solid #bdc6b9;
-  border-radius: 1rem;
-  padding: 1rem;
-  background: #fffefa;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-card);
+  background: var(--card);
   margin-top: 1.25rem;
   max-width: 28rem;
 }
 @media (min-width: 45rem) {
   .outfit-editor { display: grid; grid-template-columns: minmax(0, 28rem) minmax(0, 23rem); align-items: start; gap: 1.25rem; }
 }
+
+h1, h2, h3 { font-family: var(--font-heading); }
+h1 { font-size: clamp(2.5rem, 7vw, 3.75rem); }
+header strong { color: var(--primary); }
+button, nav a, .text-action, .photo-pickers label { min-inline-size: 44px; min-block-size: 44px; }
+nav a { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; }
+nav a[aria-current='page'] { color: var(--primary); background: var(--linen); }
+:where(a, button, input, select):focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+button:not(.action-button) { color: var(--ink); background: var(--card); }
+.closet-filters button[aria-pressed='true'], .action-button { color: var(--on-primary); background: var(--primary); }
+.add-clothing button[type='button'] { border: 1px solid var(--control-border); border-radius: .5rem; padding: .45rem .75rem; }
+.photo-pickers label { background: var(--card); }
+.photo-pickers input { inset: 0; margin: 0; }

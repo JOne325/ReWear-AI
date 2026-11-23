@@ -1,3 +1,21 @@
-:root { font-family: system-ui, sans-serif; color: #1e362e; background: #f7f6ef; }
+:root {
+  --font-heading: 'Newsreader', Georgia, serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --ink: #211b2b;
+  --muted: #51485d;
+  --primary: #5c35ba;
+  --on-primary: #fff;
+  --page: #faf8fe;
+  --card: #fffefa;
+  --linen: #eeeae1;
+  --border: #d3cadb;
+  --control-border: #7a7188;
+  --radius-card: 1rem;
+  --space-card: 1rem;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--page);
+}
+
 body { margin: 0; }
 * { box-sizing: border-box; }
