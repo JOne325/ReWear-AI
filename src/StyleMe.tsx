@@ -5,7 +5,7 @@ import { getOutfit, putOutfit } from './clothingStorage'
 import { nextCombination } from './rotation'
 import OutfitBoard from './OutfitBoard'
 import {
-  baseCategories, clothingCategories, occasions,
+  baseCategories, clothingCategories, occasions, recommendationItemLimit,
   type ClothingCategory, type ClothingItem, type Occasion, type OutfitRecommendation, type SavedOutfit,
 } from './wardrobe'
 
@@ -17,6 +17,17 @@ function outfitHistory(key: string): string[] {
   try {
     const stored: unknown = JSON.parse(localStorage.getItem(key) ?? '[]')
     return Array.isArray(stored) ? stored.filter((entry): entry is string => typeof entry === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function recentOutfits(key: string): string[][] {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(key) ?? '[]')
+    return Array.isArray(stored) ? stored.filter((entry): entry is string[] =>
+      Array.isArray(entry) && entry.length <= 4 &&
+      entry.every(id => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(id))).slice(-5) : []
   } catch {
     return []
   }
@@ -88,33 +99,39 @@ function OutfitEditor({ closet, demo, pin, remix }: {
   async function suggest() {
     setPending('suggest')
     setError('')
-    const scope = pin && pin.category !== 'Outerwear' ? ':piece:' + pin.id : ''
-    const key = 'rewear:shown:' + (demo ? 'demo:' : 'closet:') + occasion + scope
-    const choice = nextCombination(eligible, outfitHistory(key))
     try {
-      if (!choice) return
-      const candidates = choice.pieces
       let result: OutfitRecommendation
       if (demo) {
+        const scope = pin && pin.category !== 'Outerwear' ? ':piece:' + pin.id : ''
+        const key = 'rewear:shown:demo:' + occasion + scope
+        const choice = nextCombination(eligible, outfitHistory(key))
+        if (!choice) return
+        const candidates = choice.pieces
         const [top, bottom, shoes] = candidates
         result = { itemIds: candidates.map(item => item.id), reason: occasion === 'Interview'
           ? top.name + ' and ' + bottom.name + ' make a casual interview outfit. Check whether the dress code allows sneakers.'
           : top.name + ' pairs with ' + bottom.name + ' for classes, and ' + shoes.name + ' keep the look casual.' }
+        try { localStorage.setItem(key, JSON.stringify(choice.history)) } catch { /* The outfit is still usable. */ }
       } else {
+        const key = 'rewear:recent:' + occasion
+        const recent = recentOutfits(key)
+        const candidates = closet.length <= recommendationItemLimit ? closet : clothingCategories.flatMap(category =>
+          closet.filter(item => item.category === category).slice(0, category === 'Outerwear' ? 10 : 30))
         const response = await fetch('/api/recommendations', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ occasion, items: candidates.map(({ id, name, category, color }) => ({ id, name, category, color })) }),
+          body: JSON.stringify({ occasion, avoid: recent, items: candidates.map(({ id, name, category, color }) => ({ id, name, category, color })) }),
         })
         const data: OutfitRecommendation & { error?: string } = await response.json()
         if (!response.ok) throw new Error(data.error || 'Could not get an outfit.')
         result = data
-        if (pin?.category === 'Outerwear' && !result.itemIds.includes(pin.id)) {
-          result = { itemIds: [...result.itemIds, pin.id], reason: result.reason + ' You chose ' + pin.name + ' as the outer layer.' }
+        if (pin && !result.itemIds.includes(pin.id)) {
+          const sameSlot = new Set(closet.filter(item => item.category === pin.category).map(item => item.id))
+          result = { itemIds: [...result.itemIds.filter(id => !sameSlot.has(id)), pin.id], reason: 'Built around your pinned piece: ' + pin.name + '.' }
         }
+        try { localStorage.setItem(key, JSON.stringify([...recent, result.itemIds].slice(-5))) } catch { /* The outfit is still usable. */ }
       }
       setOutfit(result)
       setSaved(false)
-      try { localStorage.setItem(key, JSON.stringify(choice.history)) } catch { /* The outfit is still usable. */ }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Try again.')
     } finally {

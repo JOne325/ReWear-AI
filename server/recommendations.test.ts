@@ -69,3 +69,31 @@ test('allows outerwear as a layer and requires a separate base top', async () =>
   assert.equal((await recommendOutfit({ items: [...items.slice(1), jacket] }, config, async () =>
     assert.fail('Outerwear cannot fill the base-top slot'))).status, 400)
 })
+
+test('includes only owned recent outfit IDs in the system instruction', async () => {
+  let instruction = ''
+  const result = await recommendOutfit({ items, avoid: [['tee', 'jeans', 'shoes'], ['ghost']] }, config, async (_url, init) => {
+    instruction = JSON.parse(String(init?.body)).systemInstruction.parts[0].text
+    return providerResponse(outfit)
+  })
+  assert.equal(result.status, 200)
+  assert.match(instruction, /Recent outfits.*tee/)
+  assert.doesNotMatch(instruction, /ghost/)
+})
+
+test('rejects malformed recent outfits before calling Gemini', async () => {
+  const result = await recommendOutfit({ items, avoid: 'nope' }, config, async () => {
+    assert.fail('Gemini must not be called')
+  })
+  assert.deepEqual(result, { status: 400, body: { error: 'Send a valid list of recent outfits.' } })
+})
+
+test('omits recent outfit instructions when avoid is absent', async () => {
+  let instruction = ''
+  const result = await recommendOutfit({ items }, config, async (_url, init) => {
+    instruction = JSON.parse(String(init?.body)).systemInstruction.parts[0].text
+    return providerResponse(outfit)
+  })
+  assert.equal(result.status, 200)
+  assert.doesNotMatch(instruction, /Recent outfits/)
+})
